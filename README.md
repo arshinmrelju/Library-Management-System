@@ -1,35 +1,39 @@
 # 🏛️ Navodaya Library Web App
 
-Navodaya Library is a lightweight, mobile-first web application designed for rural communities. It provides an intuitive, WhatsApp-inspired interface for users to browse books, locate them on physical shelves, and request titles without needing a complex login system. It also features a secure Librarian Portal for tracking inventory and managing book requests.
+Navodaya Library is a professional, mobile-first digital library assistant designed for rural communities. It provides an intuitive interface for users to browse books, locate them on physical shelves, and request titles seamlessly. The app is powered by **Firebase** for real-time data synchronization and secure administrative control.
 
 ## ✨ Features
 
-- **📱 Mobile-First Design:** Clean, simple, and high-contrast UI tailored for mobile screens.
-- **🚪 QR Code Entry:** Users can scan a QR code at the library entrance to open the app instantly.
-- **📚 Smart Catalog & Search:** Browse the library or search by Title, Author, or exact Shelf Location.
-- **📍 Detailed Book Mapping:** See exactly where a book is located (e.g., `Fiction • Shelf A-1 • Top Row`) alongside an interactive Digital Library Map.
-- **📥 Frictionless Requests:** Users can request to borrow a book simply by entering their Name and Phone Number (no account creation required).
-- **🔐 Secure Administrator Portal:** A protected interface (`admin.html`) for the librarian to Add, Edit, or Delete books and approve incoming borrow requests.
-- **⚡ Offline-Ready State:** Built entirely with standard HTML, CSS, and Vanilla JavaScript using `localStorage` for blazing-fast performance.
+- **📱 Professional Mobile-First Design**: Clean, modern UI tailored for smartphones with smooth transitions.
+- **🚀 Real-Time Synchronization**: Powered by **Firebase Firestore**, book availability and requests update instantly.
+- **📚 Smart Catalog & Search**: Browse the collection or search by Title, Author, or Category.
+- **📍 Physical Book Mapping**: Visual guides to help users find books on specific shelves.
+- **📥 Frictionless Requests**: Users enter their Name and Phone Number to request a book; no complex account creation needed.
+- **🔐 Secure Librarian Portal**: A protected dashboard (`admin.html`) for managing inventory and approving borrow requests via **Firebase Authentication**.
 
 ## 🚀 Getting Started
 
-### Prerequisites
-Since the application uses standard web technologies with no backend dependencies, all you need is a modern web browser or a basic local hot server (like VS Code Live Server). 
+### 1. Prerequisites
+- A modern web browser.
+- A **Firebase Project** (Create one at [console.firebase.google.com](https://console.firebase.google.com/)).
 
-### Installation
+### 2. Configuration
+1. Enable **Firestore Database** and **Authentication** (Email/Password) in your Firebase Console.
+2. In your Project Settings, register a Web App and copy the `firebaseConfig` object.
+3. Open `js/firebase-config.js` and paste your configuration.
+
+### 3. Installation & Run
 1. Clone the repository:
    ```bash
    git clone https://github.com/arshinmrelju/Navodaya-Library.git
    ```
-2. Navigate to the project directory:
-   ```bash
-   cd Navodaya-Library
-   ```
-3. Open `index.html` in your web browser to view the user application.
-4. Open `admin.html` to access the Librarian Portal. *(Default password: `c`)*
+2. Open `index.html` in your browser (use a local server like VS Code Live Server for the best experience with JS Modules).
+3. Access the Librarian Portal at `admin.html`.
 
-## 🛠️ Architecture
-- **Frontend Core:** HTML5, CSS3 (Custom Navigation, Flexbox Layouts)
-- **Logic:** Vanilla JavaScript (ES6+)
-- **Storage:** Client-side Local Storage API (`navodaya_library_data`)
+## 🛠️ Technical Stack
+- **Frontend**: HTML5, CSS3 (Custom Design System, Flexbox/Grid)
+- **Logic**: Vanilla JavaScript (ES6 Modules)
+- **Backend/Database**: Firebase (Firestore & Authentication)
+
+## ⚖️ License
+This project is open-source and designed for community use.
