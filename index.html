@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Navodaya Library</title>
+    <!-- Google Fonts for Roboto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <style>
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .modal-content h3 {
+            margin-bottom: 16px;
+            color: var(--primary-color);
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 16px;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Top App Bar -->
+    <header class="app-header" id="app-header">
+        <h1 class="app-title" id="header-title">Navodaya Library</h1>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="app-content">
+        
+        <!-- Welcome View -->
+        <section id="welcome-view" class="view active-view">
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; padding:24px;">
+                <div style="font-size:80px; margin-bottom:16px;">🏛️</div>
+                <h2 style="color:var(--primary-color); margin-bottom:32px; text-align:center; font-size:28px; line-height:1.3;">Welcome to<br>Navodaya Library</h2>
+                <div style="width:100%; display:flex; flex-direction:column; gap:16px;">
+                    <button class="btn btn-primary" style="background-color:var(--primary-light); padding:16px; font-size:18px; display:flex; gap:12px; align-items:center; justify-content:center;" onclick="navigateTo('library-view')">
+                        <span style="font-size:24px;">📚</span> Browse Books
+                    </button>
+                    <button class="btn btn-primary" style="background-color:var(--primary-light); padding:16px; font-size:18px; display:flex; gap:12px; align-items:center; justify-content:center;" onclick="navigateTo('map-view')">
+                        <span style="font-size:24px;">🧭</span> Find a Book Location
+                    </button>
+                    <button class="btn btn-primary" style="background-color:var(--primary-color); padding:16px; font-size:18px; display:flex; gap:12px; align-items:center; justify-content:center;" onclick="navigateTo('library-view')">
+                        <span style="font-size:24px;">📥</span> Request a Book
+                    </button>
+                </div>
+                <div style="margin-top:40px; text-align:center;">
+                    <a href="admin.html" style="color:var(--text-secondary); font-size:14px; text-decoration:none;">Librarian Login</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Library Catalog View -->
+        <section id="library-view" class="view">
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search books..." class="search-input">
+            </div>
+            <div id="book-list" class="book-list">
+                <!-- Books injected by JS -->
+            </div>
+        </section>
+
+        <!-- Digital Library Map View -->
+        <section id="map-view" class="view">
+            <h2 class="view-title" style="text-align:center;">Library Layout</h2>
+            <div class="library-map-wrapper">
+                <div class="library-map">
+                    <div class="map-row">
+                        <div class="map-shelf bg-fiction">Fiction</div>
+                        <div class="map-shelf bg-nonfiction">Non-Fiction</div>
+                    </div>
+                    <div class="map-aisle">Main Aisle</div>
+                    <div class="map-row">
+                        <div class="map-shelf bg-science">Science</div>
+                        <div class="map-shelf bg-history">History</div>
+                    </div>
+                    <div class="map-row" style="justify-content:center; margin-top:24px;">
+                        <div class="map-shelf bg-children" style="width:70%;">Children's Books</div>
+                    </div>
+                    <div class="map-entrance">⬆ Entrance</div>
+                </div>
+            </div>
+            <p style="text-align:center; color:var(--text-secondary); margin-top:16px; font-size:14px;">Look for the color-coded shelves in the physical library to easily locate your books.</p>
+        </section>
+
+        <!-- Book Detail View -->
+        <section id="book-detail-view" class="view">
+            <button class="btn btn-back" id="back-to-library">&larr; Back</button>
+            <div id="book-detail-content">
+                <!-- details injected by JS -->
+            </div>
+        </section>
+
+        <!-- My Books View -->
+        <section id="my-books-view" class="view">
+            <h2 class="view-title">My Pending & Borrowed Books</h2>
+            <div id="my-books-header" style="text-align:center; margin-bottom:16px;">
+                <!-- Login or user info logic -->
+            </div>
+            <div id="borrowed-list" class="book-list">
+                <!-- Books injected by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <button class="nav-item active" data-target="library-view">
+            <span class="nav-icon">📚</span>
+            <span>Library</span>
+        </button>
+        <button class="nav-item" data-target="map-view">
+            <span class="nav-icon">🧭</span>
+            <span>Map</span>
+        </button>
+        <button class="nav-item" data-target="my-books-view" id="nav-my-books">
+            <span class="nav-icon">📖</span>
+            <span id="my-books-badge">My Books</span>
+        </button>
+    </nav>
+
+    <!-- Modals -->
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="auth-modal-title">Enter details to request</h3>
+            <p style="color:var(--text-secondary); font-size:14px; margin-bottom:16px;">We need your name and phone number so the librarian can process your request.</p>
+            <form id="auth-form">
+                <div class="input-group">
+                    <label for="user-name">Your Name</label>
+                    <input type="text" id="user-name" placeholder="E.g. Ramesh" required>
+                </div>
+                <div class="input-group">
+                    <label for="user-phone">Phone Number</label>
+                    <input type="tel" id="user-phone" placeholder="10-digit number" pattern="[0-9]{10}" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Submit</button>
+                <button type="button" class="close-modal" onclick="closeAuthModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

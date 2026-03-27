@@ -1,0 +1,207 @@
+/* WhatsApp-inspired Design System */
+:root {
+    --primary-color: #075E54;
+    --primary-light: #128C7E;
+    --secondary-color: #25D366;
+    --bg-color: #ECE5DD;
+    --surface-color: #FFFFFF;
+    --text-primary: #000000;
+    --text-secondary: #667781;
+    --border-color: #E9EDEF;
+    --danger-color: #ef4444;
+
+    /* Map colors */
+    --c-fiction: #4caf50;
+    --c-nonfiction: #ff9800;
+    --c-science: #03a9f4;
+    --c-history: #9c27b0;
+    --c-children: #e91e63;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent; /* Remove active highlight on mobile */
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh; /* Mobile viewport height fix */
+    overflow: hidden;
+}
+
+/* App Header */
+.app-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.app-title {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+/* Main Content Area */
+main {
+    flex-grow: 1;
+    overflow-y: auto;
+    position: relative;
+    padding-bottom: 70px; /* Space for bottom nav */
+}
+
+/* Views Management */
+.view {
+    display: none;
+    padding: 16px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.view.active-view {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Auth View Special Styling */
+#auth-view {
+    background-color: var(--surface-color);
+    min-height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 32px 24px;
+}
+
+#auth-view.active-view {
+    display: flex; /* Override block to flex */
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.auth-header h2 {
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--surface-color);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+    z-index: 10;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.view-title {
+    margin-bottom: 16px;
+    color: var(--primary-color);
+}
+
+/* Digital Library Map */
+.library-map-wrapper {
+    background: var(--surface-color);
+    padding: 24px 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.library-map {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.map-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.map-shelf {
+    flex: 1;
+    height: 80px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bg-fiction { background-color: var(--c-fiction); }
+.bg-nonfiction { background-color: var(--c-nonfiction); }
+.bg-science { background-color: var(--c-science); }
+.bg-history { background-color: var(--c-history); }
+.bg-children { background-color: var(--c-children); }
+
+.map-aisle {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    letter-spacing: 2px;
+    background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);
+}
+
+.map-entrance {
+    text-align: center;
+    padding-top: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+    border-top: 2px dashed var(--primary-light);
+    margin-top: 16px;
+}
