@@ -1,40 +1,65 @@
-// Admin Logic
-let currentView = 'requests-view';
+import { db, auth } from './firebase-config.js';
+import { 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    signOut 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+    collection, 
+    onSnapshot, 
+    doc, 
+    addDoc, 
+    updateDoc, 
+    deleteDoc, 
+    serverTimestamp,
+    orderBy,
+    query
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+let currentView = 'requests-view';
 const views = document.querySelectorAll('.view');
 const navItems = document.querySelectorAll('.nav-item');
 
-function initAdmin() {
-    // Check if admin is authenticated via sessionStorage
-    if (sessionStorage.getItem('navodaya_admin_auth') === 'true') {
-        showApp();
-    }
-    
-    // Login form logic
-    document.getElementById('admin-login-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const pwd = document.getElementById('admin-password').value;
-        if (pwd === 'c') { // As per user instructions, password is 'c'
-            sessionStorage.setItem('navodaya_admin_auth', 'true');
+let libraryData = {
+    books: [],
+    requests: []
+};
+
+export function initAdmin() {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
             showApp();
         } else {
-            alert('Incorrect password. Try "c"');
+            showLogin();
         }
     });
+
+    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = "admin@navodaya.lib"; // Default admin email
+        const pwd = document.getElementById('admin-password').value;
+        try {
+            await signInWithEmailAndPassword(auth, email, pwd);
+        } catch (err) {
+            alert("Login failed. Check password.");
+        }
+    });
+}
+
+function showLogin() {
+    document.getElementById('admin-login-screen').style.display = 'flex';
+    document.getElementById('admin-app').style.display = 'none';
 }
 
 function showApp() {
     document.getElementById('admin-login-screen').style.display = 'none';
     document.getElementById('admin-app').style.display = 'flex';
     setupListeners();
-    renderRequests();
-    renderBorrows();
-    renderInventory();
+    setupDataListeners();
 }
 
-window.logout = function() {
-    sessionStorage.removeItem('navodaya_admin_auth');
-    window.location.reload();
+window.logout = async function () {
+    await signOut(auth);
 };
 
 function setupListeners() {
@@ -47,12 +72,30 @@ function setupListeners() {
     });
 }
 
+function setupDataListeners() {
+    onSnapshot(collection(db, "books"), (snapshot) => {
+        libraryData.books = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (currentView === 'inventory-view') renderInventory();
+        else {
+            renderRequests();
+            renderBorrows();
+        }
+    });
+
+    const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
+        libraryData.requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderRequests();
+        renderBorrows();
+    });
+}
+
 function navigateTo(viewId) {
     views.forEach(view => view.classList.remove('active-view'));
     document.getElementById(viewId).classList.add('active-view');
     currentView = viewId;
-    
-    if(viewId === 'requests-view') {
+
+    if (viewId === 'requests-view') {
         renderRequests();
         renderBorrows();
     } else {
@@ -60,116 +103,95 @@ function navigateTo(viewId) {
     }
 }
 
-// ---------------------------
-// REQUESTS & BORROWS
-// ---------------------------
 function renderRequests() {
     const list = document.getElementById('pending-list');
     list.innerHTML = '';
-    
     const pendings = libraryData.requests.filter(r => r.status === 'pending');
-    
+
     if (pendings.length === 0) {
         list.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No pending requests.</p>';
         return;
     }
-    
+
     pendings.forEach(req => {
-        const book = libraryData.books.find(b => b.id === req.bookId);
-        if(!book) return;
-        
         const card = document.createElement('div');
         card.className = 'book-card req-card';
         card.innerHTML = `
             <div class="req-header">
                 <span><strong>${req.userName}</strong> (${req.userPhone})</span>
-                <span>${window.formatDate(req.timestamp)}</span>
+                <span>${req.timestamp ? new Date(req.timestamp.seconds * 1000).toLocaleTimeString() : '...'}</span>
             </div>
             <div class="req-body">
-                <div class="book-img-placeholder" style="background-color: ${book.color}20; color: ${book.color}; width:50px; height:70px; font-size:18px;">
-                    ${book.image}
-                </div>
                 <div class="book-info">
-                    <h3 class="book-title" style="font-size:14px;">${book.title}</h3>
+                    <h3 class="book-title" style="font-size:14px;">${req.bookTitle}</h3>
                 </div>
             </div>
             <div class="req-actions">
-                <button class="btn btn-primary" style="padding: 8px 16px; font-size:14px; flex:1;" onclick="processRequest(${req.id}, 'approved')">Approve</button>
-                <button class="btn btn-danger" style="padding: 8px 16px; font-size:14px; flex:1;" onclick="processRequest(${req.id}, 'rejected')">Reject</button>
+                <button class="btn btn-primary" style="padding: 8px 16px; font-size:14px; flex:1;" id="approve-${req.id}">Approve</button>
+                <button class="btn btn-danger" style="padding: 8px 16px; font-size:14px; flex:1;" id="reject-${req.id}">Reject</button>
             </div>
         `;
         list.appendChild(card);
+        card.querySelector(`#approve-${req.id}`).onclick = () => updateRequestStatus(req.id, 'borrowed', req.bookId);
+        card.querySelector(`#reject-${req.id}`).onclick = () => updateRequestStatus(req.id, 'rejected', req.bookId);
     });
 }
 
 function renderBorrows() {
     const list = document.getElementById('borrowed-list');
     list.innerHTML = '';
-    
-    const borrows = libraryData.requests.filter(r => r.status === 'approved');
-    
+    const borrows = libraryData.requests.filter(r => r.status === 'borrowed');
+
     if (borrows.length === 0) {
         list.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No active borrows.</p>';
         return;
     }
-    
+
     borrows.forEach(req => {
-        const book = libraryData.books.find(b => b.id === req.bookId);
-        if(!book) return;
-        
         const card = document.createElement('div');
         card.className = 'book-card req-card';
         card.innerHTML = `
             <div class="req-header">
                 <span><strong>${req.userName}</strong> (${req.userPhone})</span>
-                <span>Borrowed</span>
+                <span>In Progress</span>
             </div>
             <div class="req-body">
-                <div class="book-img-placeholder" style="background-color: ${book.color}20; color: ${book.color}; width:50px; height:70px; font-size:18px;">
-                    ${book.image}
-                </div>
                 <div class="book-info">
-                    <h3 class="book-title" style="font-size:14px;">${book.title}</h3>
+                    <h3 class="book-title" style="font-size:14px;">${req.bookTitle}</h3>
                 </div>
             </div>
             <div class="req-actions">
-                <button class="btn" style="background:#e0e0e0; color:black; padding: 8px 16px; font-size:14px; flex:1;" onclick="processRequest(${req.id}, 'returned')">Mark Returned</button>
+                <button class="btn" style="background:#e0e0e0; color:black; padding: 8px 16px; font-size:14px; flex:1;" id="return-${req.id}">Mark Returned</button>
             </div>
         `;
         list.appendChild(card);
+        card.querySelector(`#return-${req.id}`).onclick = () => updateRequestStatus(req.id, 'returned', req.bookId);
     });
 }
 
-window.processRequest = function(reqId, newStatus) {
-    const req = libraryData.requests.find(r => r.id === reqId);
-    if(req) {
-        req.status = newStatus;
-        if (newStatus === 'rejected' || newStatus === 'returned') {
-            const book = libraryData.books.find(b => b.id === req.bookId);
-            if(book) book.available = true;
+async function updateRequestStatus(reqId, newStatus, bookId) {
+    try {
+        await updateDoc(doc(db, "requests", reqId), { status: newStatus });
+        
+        // If borrowed, mark book unavailable. If returned/rejected, mark available.
+        const available = (newStatus !== 'borrowed');
+        if (newStatus === 'borrowed' || newStatus === 'returned' || newStatus === 'rejected') {
+            await updateDoc(doc(db, "books", bookId), { available: available });
         }
-        window.saveLibraryData();
-        renderRequests();
-        renderBorrows();
-        if(currentView === 'inventory-view') renderInventory();
+    } catch (e) {
+        console.error(e);
     }
 }
 
-// ---------------------------
-// INVENTORY
-// ---------------------------
 function renderInventory() {
     const list = document.getElementById('inventory-list');
     list.innerHTML = '';
-    
+
     libraryData.books.forEach(book => {
         const card = document.createElement('div');
         card.className = 'book-card';
         card.style.alignItems = 'center';
         card.innerHTML = `
-            <div class="book-img-placeholder" style="background-color: ${book.color}20; color: ${book.color}">
-                ${book.image}
-            </div>
             <div class="book-info">
                 <h3 class="book-title">${book.title}</h3>
                 <p class="book-author">${book.author}</p>
@@ -178,15 +200,17 @@ function renderInventory() {
                 </span>
             </div>
             <div style="display:flex; flex-direction:column; gap:8px;">
-                <button class="edit-book-btn" onclick="openBookForm(${book.id})" title="Edit Book">✏️</button>
-                <button class="delete-book-btn" onclick="deleteBook(${book.id})" title="Delete Book">🗑️</button>
+                <button class="edit-book-btn" id="edit-${book.id}">✏️</button>
+                <button class="delete-book-btn" id="delete-${book.id}">🗑️</button>
             </div>
         `;
         list.appendChild(card);
+        card.querySelector(`#edit-${book.id}`).onclick = () => openBookForm(book.id);
+        card.querySelector(`#delete-${book.id}`).onclick = () => deleteBook(book.id);
     });
 }
 
-window.openBookForm = function(bookId = null) {
+window.openBookForm = function (bookId = null) {
     const formContainer = document.getElementById('book-form-container');
     const title = document.getElementById('book-form-title');
     const idField = document.getElementById('edit-book-id');
@@ -194,7 +218,6 @@ window.openBookForm = function(bookId = null) {
     const authorField = document.getElementById('new-author');
     const sectionField = document.getElementById('new-section');
     const shelfField = document.getElementById('new-shelf');
-    const rowField = document.getElementById('new-row');
 
     if (bookId) {
         const book = libraryData.books.find(b => b.id === bookId);
@@ -203,9 +226,8 @@ window.openBookForm = function(bookId = null) {
             idField.value = book.id;
             titleField.value = book.title;
             authorField.value = book.author;
-            sectionField.value = book.location?.section || '';
-            shelfField.value = book.location?.shelf || '';
-            rowField.value = book.location?.row || '';
+            sectionField.value = book.section || '';
+            shelfField.value = book.shelf_number || '';
         }
     } else {
         title.textContent = 'New Book';
@@ -214,70 +236,40 @@ window.openBookForm = function(bookId = null) {
         authorField.value = '';
         sectionField.value = '';
         shelfField.value = '';
-        rowField.value = '';
     }
-    
     formContainer.style.display = 'block';
 };
 
-window.closeBookForm = function() {
+window.closeBookForm = function () {
     document.getElementById('book-form-container').style.display = 'none';
 };
 
-window.saveBook = function() {
+window.saveBook = async function () {
     const editId = document.getElementById('edit-book-id').value;
-    const title = document.getElementById('new-title').value.trim();
-    const author = document.getElementById('new-author').value.trim();
-    
-    const section = document.getElementById('new-section').value.trim();
-    const shelf = document.getElementById('new-shelf').value.trim();
-    const row = document.getElementById('new-row').value.trim();
-    
-    if(!title || !author) {
-        alert("Please enter title and author");
-        return;
-    }
-    
-    const locationObj = { section, shelf, row };
-    
-    if (editId) {
-        const book = libraryData.books.find(b => b.id === parseInt(editId));
-        if (book) {
-            book.title = title;
-            book.author = author;
-            book.location = locationObj;
+    const bookData = {
+        title: document.getElementById('new-title').value.trim(),
+        author: document.getElementById('new-author').value.trim(),
+        section: document.getElementById('new-section').value.trim(),
+        shelf_number: document.getElementById('new-shelf').value.trim(),
+        available: true
+    };
+
+    if (!bookData.title || !bookData.author) return;
+
+    try {
+        if (editId) {
+            await updateDoc(doc(db, "books", editId), bookData);
+        } else {
+            await addDoc(collection(db, "books"), bookData);
         }
-    } else {
-        const newBook = {
-            id: Date.now(),
-            title: title,
-            author: author,
-            description: "Added by librarian.",
-            image: "📖", 
-            color: "#607d8b",
-            location: locationObj,
-            available: true
-        };
-        libraryData.books.push(newBook);
-    }
-    
-    window.saveLibraryData();
-    closeBookForm();
-    renderInventory();
-};
-
-window.deleteBook = function(bookId) {
-    if (confirm("Are you sure you want to delete this book?")) {
-        // Remove book
-        libraryData.books = libraryData.books.filter(b => b.id !== bookId);
-        // Also clean up related requests if desired (optional but good practice)
-        libraryData.requests = libraryData.requests.filter(r => r.bookId !== bookId);
-        
-        window.saveLibraryData();
-        renderInventory();
-        renderRequests();
-        renderBorrows();
+        closeBookForm();
+    } catch (e) {
+        console.error(e);
     }
 };
 
-document.addEventListener('DOMContentLoaded', initAdmin);
+async function deleteBook(id) {
+    if (confirm("Delete book?")) {
+        await deleteDoc(doc(db, "books", id));
+    }
+}

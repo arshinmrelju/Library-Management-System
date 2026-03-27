@@ -1,19 +1,63 @@
+import { db, auth } from './firebase-config.js';
+import { 
+    collection, 
+    addDoc, 
+    onSnapshot, 
+    query, 
+    where, 
+    doc, 
+    updateDoc, 
+    getDocs, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 let currentUser = null;
 let currentView = 'welcome-view';
 let pendingRequestBookId = null;
+
+let libraryData = {
+    books: [],
+    requests: []
+};
 
 // DOM Elements
 const views = document.querySelectorAll('.view');
 const headerTitle = document.getElementById('header-title');
 const navItems = document.querySelectorAll('.nav-item');
 
-function initApp() {
+export function initApp() {
     const userStr = localStorage.getItem('navodaya_user');
     if (userStr) {
         currentUser = JSON.parse(userStr);
     }
     setupEventListeners();
+    setupFirestoreListeners();
     navigateTo('welcome-view');
+}
+
+function setupFirestoreListeners() {
+    // Listen for books
+    onSnapshot(collection(db, "books"), (snapshot) => {
+        libraryData.books = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        if (currentView === 'library-view') renderLibraryView();
+        if (currentView === 'my-books-view') renderMyBooksView();
+    });
+
+    // Listen for requests (user specific if logged in)
+    if (currentUser) {
+        const q = query(collection(db, "requests"), where("userPhone", "==", currentUser.phone));
+        onSnapshot(q, (snapshot) => {
+            libraryData.requests = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            if (currentView === 'library-view') renderLibraryView();
+            if (currentView === 'my-books-view') renderMyBooksView();
+        });
+    }
 }
 
 function setupEventListeners() {
@@ -44,13 +88,12 @@ function setupEventListeners() {
         localStorage.setItem('navodaya_user', JSON.stringify(currentUser));
         
         closeAuthModal();
+        setupFirestoreListeners(); // Refresh listener for new user
 
-        // If auth was triggered by a book request, process it now
         if (pendingRequestBookId) {
             processRequestBook(pendingRequestBookId);
             pendingRequestBookId = null;
         } else {
-            // It was triggered by "My Books" tab
             renderMyBooksView();
         }
     });
@@ -83,9 +126,7 @@ function navigateTo(viewId, action = null) {
     } else if (viewId === 'my-books-view') {
         headerTitle.textContent = 'My Books';
         if (!currentUser) {
-            // Ask for phone number to view their books
             openAuthModal("Enter details to view your books");
-            // Show message in the view meanwhile
             document.getElementById('borrowed-list').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px;">
                     <button class="btn btn-primary" onclick="openAuthModal('Enter details to view your books')">Identify Yourself</button>
@@ -101,14 +142,11 @@ function navigateTo(viewId, action = null) {
 
 function updateNavActive(viewId) {
     navItems.forEach(nav => {
-        if(nav.dataset.target === viewId) nav.classList.add('active');
+        if (nav.dataset.target === viewId) nav.classList.add('active');
         else nav.classList.remove('active');
     });
 }
 
-// ---------------------------
-// LIBRARY CATALOG
-// ---------------------------
 function renderLibraryView(searchQuery = '') {
     const listContainer = document.getElementById('book-list');
     listContainer.innerHTML = '';
@@ -116,34 +154,36 @@ function renderLibraryView(searchQuery = '') {
     const booksToRender = libraryData.books.filter(book => {
         const titleMatch = book.title.toLowerCase().includes(searchQuery);
         const authorMatch = book.author.toLowerCase().includes(searchQuery);
-        const sectionMatch = book.location?.section?.toLowerCase().includes(searchQuery);
-        const shelfMatch = book.location?.shelf?.toLowerCase().includes(searchQuery);
+        const sectionMatch = book.section?.toLowerCase().includes(searchQuery);
+        const shelfMatch = book.shelf_number?.toLowerCase().includes(searchQuery);
         return titleMatch || authorMatch || sectionMatch || shelfMatch;
     });
 
-    if (booksToRender.length === 0) {
+    if (booksToRender.length === 0 && libraryData.books.length > 0) {
         listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 20px;">No books found.</p>';
+        return;
+    } else if (libraryData.books.length === 0) {
+        listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 20px;">Loading books...</p>';
         return;
     }
 
-    // Active requests for the current user if logged in
-    const targetStatuses = ['pending', 'approved'];
-    let myActiveRequests = [];
+    const targetStatuses = ['pending', 'borrowed'];
+    let myRequests = [];
     if (currentUser) {
-        myActiveRequests = libraryData.requests.filter(r => 
+        myRequests = libraryData.requests.filter(r => 
             r.userPhone === currentUser.phone && targetStatuses.includes(r.status)
         );
     }
 
     booksToRender.forEach(book => {
-        const myRequestForBook = myActiveRequests.find(r => r.bookId === book.id);
+        const myRequest = myRequests.find(r => r.bookId === book.id);
         
         let statusHtml = '';
-        if (myRequestForBook) {
-            if (myRequestForBook.status === 'pending') {
-                 statusHtml = '<span class="status-badge" style="background-color:#fff3e0; color:#e65100;">Request Pending</span>';
-            } else if (myRequestForBook.status === 'approved') {
-                 statusHtml = '<span class="status-badge status-available" style="color:#d32f2f; background-color:#ffebee;">Borrowed</span>';
+        if (myRequest) {
+            if (myRequest.status === 'pending') {
+                statusHtml = '<span class="status-badge" style="background-color:#fff3e0; color:#e65100;">Request Pending</span>';
+            } else if (myRequest.status === 'borrowed') {
+                statusHtml = '<span class="status-badge status-borrowed">Borrowed</span>';
             }
         } else if (book.available) {
             statusHtml = '<span class="status-badge status-available">Available</span>';
@@ -151,20 +191,13 @@ function renderLibraryView(searchQuery = '') {
             statusHtml = '<span class="status-badge status-borrowed">Unavailable</span>';
         }
 
-        let locationText = "Location not specified";
-        if (book.location) {
-            const parts = [];
-            if (book.location.section) parts.push(book.location.section);
-            if (book.location.shelf) parts.push(book.location.shelf);
-            if (book.location.row) parts.push(book.location.row);
-            if (parts.length > 0) locationText = parts.join(' • ');
-        }
+        const locationText = `${book.section || 'N/A'} • ${book.shelf_number || 'N/A'}`;
 
         const card = document.createElement('div');
         card.className = 'book-card';
         card.innerHTML = `
-            <div class="book-img-placeholder" style="background-color: ${book.color}20; color: ${book.color}">
-                ${book.image}
+            <div class="book-img-placeholder" style="background-color: var(--primary-light)20; color: var(--primary-color)">
+                📚
             </div>
             <div class="book-info">
                 <h3 class="book-title">${book.title}</h3>
@@ -175,67 +208,58 @@ function renderLibraryView(searchQuery = '') {
         `;
         
         card.addEventListener('click', () => {
-            showBookDetail(book, myRequestForBook);
+            showBookDetail(book, myRequest);
         });
         
         listContainer.appendChild(card);
     });
 }
 
-function showBookDetail(book, myRequestForBook) {
+function showBookDetail(book, myRequest) {
     const container = document.getElementById('book-detail-content');
     
     let actionBtnHtml = '';
-    if (myRequestForBook) {
-        if (myRequestForBook.status === 'pending') {
-            actionBtnHtml = `<button class="btn btn-primary w-100" style="background-color:#fb8c00;" disabled>Request is Pending Approval</button>`;
-        } else if (myRequestForBook.status === 'approved') {
-             actionBtnHtml = `<button class="btn btn-primary w-100" style="background-color:#4caf50;" disabled>You Borrowed This Book</button>`;
+    if (myRequest) {
+        if (myRequest.status === 'pending') {
+            actionBtnHtml = `<button class="btn btn-primary w-100" style="background-color:#fb8c00;" disabled>Request is Pending</button>`;
+        } else if (myRequest.status === 'borrowed') {
+            actionBtnHtml = `<button class="btn btn-primary w-100" style="background-color:#4caf50;" disabled>You Borrowed This</button>`;
         }
     } else if (book.available) {
-        actionBtnHtml = `<button class="btn btn-primary w-100" onclick="handleRequestAction(${book.id})">Request Book</button>`;
+        actionBtnHtml = `<button class="btn btn-primary w-100" id="req-btn-${book.id}">Request Book</button>`;
     } else {
-        actionBtnHtml = `<button class="btn btn-primary w-100" style="background-color:#9e9e9e;" disabled>Currently Unavailable</button>`;
-    }
-
-    let locationStr = "Location not specified";
-    if (book.location) {
-        const parts = [];
-        if (book.location.section) parts.push('<b>' + book.location.section + '</b>');
-        if (book.location.shelf) parts.push(book.location.shelf);
-        if (book.location.row) parts.push(book.location.row + ' Row');
-        if (parts.length > 0) locationStr = parts.join(' &rarr; ');
+        actionBtnHtml = `<button class="btn btn-primary w-100" style="background-color:#9e9e9e;" disabled>Unavailable</button>`;
     }
 
     container.innerHTML = `
-        <div class="detail-img-container" style="background-color: ${book.color}20; color: ${book.color}">
-            ${book.image}
+        <div class="detail-img-container" style="background-color: var(--primary-light)10; color: var(--primary-color)">
+            📖
         </div>
         <h2 class="detail-title">${book.title}</h2>
         <p class="detail-author">By ${book.author}</p>
         
-        <!-- Book Location Banner -->
         <div style="background-color:#e0f2f1; padding:12px 16px; border-radius:8px; margin-bottom:16px; border-left:4px solid var(--primary-light);">
             <p style="font-size:14px; color:#004d40; margin:0;">
                 <span style="font-size:16px; margin-right:4px;">📍</span> 
-                This book is in: <br>
-                <span style="display:inline-block; margin-top:4px;">${locationStr}</span>
+                Location: <b>${book.section}</b> &rarr; <b>Shelf ${book.shelf_number}</b>
             </p>
         </div>
 
-        <p class="detail-desc">${book.description}</p>
+        <p class="detail-desc">Search and request books easily with the Navodaya Library Assistant.</p>
         <div class="detail-actions">
             ${actionBtnHtml}
         </div>
     `;
+
+    const btn = container.querySelector(`#req-btn-${book.id}`);
+    if (btn) {
+        btn.onclick = () => handleRequestAction(book.id);
+    }
     
     navigateTo('book-detail-view');
 }
 
-// ---------------------------
-// AUTH MODAL & REQUEST FLOW
-// ---------------------------
-window.handleRequestAction = function(bookId) {
+window.handleRequestAction = function (bookId) {
     if (!currentUser) {
         pendingRequestBookId = bookId;
         openAuthModal("Enter details to request this book");
@@ -244,108 +268,101 @@ window.handleRequestAction = function(bookId) {
     }
 };
 
-window.openAuthModal = function(title) {
+window.openAuthModal = function (title) {
     document.getElementById('auth-modal-title').textContent = title;
     document.getElementById('auth-modal').style.display = 'flex';
 };
 
-window.closeAuthModal = function() {
+window.closeAuthModal = function () {
     document.getElementById('auth-modal').style.display = 'none';
 };
 
-window.logoutUser = function() {
+window.logoutUser = function () {
     localStorage.removeItem('navodaya_user');
     currentUser = null;
     navigateTo('library-view');
-    updateNavActive('library-view');
+    window.location.reload();
 };
 
-function processRequestBook(bookId) {
+async function processRequestBook(bookId) {
     const book = libraryData.books.find(b => b.id === bookId);
     if (book && book.available) {
-        book.available = false; // Mark unavailable globally
-        
-        libraryData.requests.push({
-             id: Date.now(),
-             userPhone: currentUser.phone,
-             userName: currentUser.name,
-             bookId: book.id,
-             status: 'pending',
-             timestamp: Date.now()
-        });
-        
-        window.saveLibraryData();
-        alert(`You requested "${book.title}". Your request is pending librarian approval.`);
-        updateNavActive('my-books-view');
-        navigateTo('my-books-view');
+        try {
+            await addDoc(collection(db, "requests"), {
+                userPhone: currentUser.phone,
+                userName: currentUser.name,
+                bookId: book.id,
+                bookTitle: book.title,
+                status: 'pending',
+                timestamp: serverTimestamp()
+            });
+
+            // Mark book as unavailable (optional, usually admin does this upon approval, 
+            // but for self-service simplicity we can do it here or let admin manage availability)
+            // For now, per requirements, we store request with status: Pending.
+            
+            alert(`You requested "${book.title}".`);
+            navigateTo('my-books-view');
+        } catch (e) {
+            console.error(e);
+            alert("Failed to send request.");
+        }
     }
 }
 
-// ---------------------------
-// MY BOOKS VIEW
-// ---------------------------
 function renderMyBooksView() {
     const listContainer = document.getElementById('borrowed-list');
     listContainer.innerHTML = '';
-    
+
     document.getElementById('my-books-header').innerHTML = `
         <p style="font-size:14px; margin-bottom:4px;">Logged in as: <strong>${currentUser.name}</strong> (${currentUser.phone})</p>
-        <button onclick="logoutUser()" class="btn btn-danger" style="font-size:12px; padding:4px 8px;">Logout (Not Me)</button>
+        <button onclick="logoutUser()" class="btn btn-danger" style="font-size:12px; padding:4px 8px;">Logout</button>
     `;
 
-    const targetStatuses = ['pending', 'approved'];
-    const myActiveRequests = libraryData.requests.filter(r => 
-        r.userPhone === currentUser.phone && targetStatuses.includes(r.status)
-    );
-    
-    if (myActiveRequests.length === 0) {
+    if (libraryData.requests.length === 0) {
         listContainer.innerHTML = `
             <div style="text-align: center; padding: 40px 20px;">
-                <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">You haven't requested any books.</p>
-                <button class="btn btn-primary" onclick="navigateTo('library-view'); updateNavActive('library-view');">Browse Library</button>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">No requests found.</p>
+                <button class="btn btn-primary" onclick="navigateTo('library-view')">Browse Books</button>
             </div>
         `;
         return;
     }
 
-    myActiveRequests.forEach(req => {
+    libraryData.requests.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)).forEach(req => {
         const book = libraryData.books.find(b => b.id === req.bookId);
-        if (book) {
-            let statusHtml = '';
-            let statusColor = '';
-            let statusBg = '';
-            
-            if (req.status === 'pending') {
-                statusHtml = 'Pending Approval';
-                statusColor = '#e65100';
-                statusBg = '#fff3e0';
-            } else {
-                statusHtml = 'Borrowed - Picked up';
-                statusColor = '#d32f2f';
-                statusBg = '#ffebee';
-            }
-
-            const card = document.createElement('div');
-            card.className = 'book-card';
-            card.innerHTML = `
-                <div class="book-img-placeholder" style="background-color: ${book.color}20; color: ${book.color}">
-                    ${book.image}
-                </div>
-                <div class="book-info">
-                    <h3 class="book-title">${book.title}</h3>
-                    <p class="book-author">${book.author}</p>
-                    <span class="status-badge" style="color:${statusColor}; background-color:${statusBg};">${statusHtml}</span>
-                </div>
-            `;
-            
-            card.addEventListener('click', () => {
-                showBookDetail(book, req);
-            });
-            
-            listContainer.appendChild(card);
+        
+        let statusHtml = '';
+        let color = '#e65100';
+        let bg = '#fff3e0';
+        
+        if (req.status === 'borrowed') {
+            statusHtml = 'Borrowed';
+            color = '#2e7d32';
+            bg = '#e8f5e9';
+        } else if (req.status === 'returned') {
+            statusHtml = 'Returned';
+            color = '#667781';
+            bg = '#f1f5f9';
+        } else if (req.status === 'pending') {
+            statusHtml = 'Pending';
         }
+
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        card.innerHTML = `
+            <div class="book-img-placeholder" style="background-color: var(--primary-light)20; color: var(--primary-color)">
+                📚
+            </div>
+            <div class="book-info">
+                <h3 class="book-title">${req.bookTitle || 'Book'}</h3>
+                <span class="status-badge" style="color:${color}; background-color:${bg};">${statusHtml}</span>
+                <p style="font-size:11px; margin-top:8px; color:var(--text-secondary);">
+                    ${req.timestamp ? new Date(req.timestamp.seconds * 1000).toLocaleDateString() : 'Just now'}
+                </p>
+            </div>
+        `;
+        
+        listContainer.appendChild(card);
     });
 }
-
-document.addEventListener('DOMContentLoaded', initApp);

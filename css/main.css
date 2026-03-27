@@ -1,28 +1,31 @@
-/* WhatsApp-inspired Design System */
+/* Modern, Professional Mobile-First Design System */
 :root {
-    --primary-color: #075E54;
-    --primary-light: #128C7E;
-    --secondary-color: #25D366;
-    --bg-color: #ECE5DD;
-    --surface-color: #FFFFFF;
-    --text-primary: #000000;
-    --text-secondary: #667781;
-    --border-color: #E9EDEF;
+    /* Rich Teal Theme */
+    --primary-color: #006064;
+    --primary-light: #428e92;
+    --primary-dark: #00363a;
+    --secondary-color: #ff8f00;
+    --secondary-light: #ffc046;
+    --bg-color: #f4f6f8;
+    --surface-color: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
     --danger-color: #ef4444;
 
     /* Map colors */
-    --c-fiction: #4caf50;
-    --c-nonfiction: #ff9800;
-    --c-science: #03a9f4;
-    --c-history: #9c27b0;
-    --c-children: #e91e63;
+    --c-fiction: #10b981;
+    --c-nonfiction: #f59e0b;
+    --c-science: #3b82f6;
+    --c-history: #8b5cf6;
+    --c-children: #ec4899;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    -webkit-tap-highlight-color: transparent; /* Remove active highlight on mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -33,7 +36,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    height: 100dvh; /* Mobile viewport height fix */
+    height: 100dvh;
     overflow: hidden;
 }
 
@@ -41,15 +44,16 @@ body {
 .app-header {
     background-color: var(--primary-color);
     color: white;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    padding: 18px 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     z-index: 10;
     flex-shrink: 0;
 }
 
 .app-title {
-    font-size: 20px;
-    font-weight: 500;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 /* Main Content Area */
@@ -57,14 +61,14 @@ main {
     flex-grow: 1;
     overflow-y: auto;
     position: relative;
-    padding-bottom: 70px; /* Space for bottom nav */
+    padding-bottom: 80px; /* Space for bottom nav */
 }
 
 /* Views Management */
 .view {
     display: none;
-    padding: 16px;
-    animation: fadeIn 0.3s ease-in-out;
+    padding: 20px;
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .view.active-view {
@@ -72,36 +76,8 @@ main {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-/* Auth View Special Styling */
-#auth-view {
-    background-color: var(--surface-color);
-    min-height: 100%;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    padding: 32px 24px;
-}
-
-#auth-view.active-view {
-    display: flex; /* Override block to flex */
-}
-
-.auth-header {
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.auth-header h2 {
-    color: var(--primary-color);
-    margin-bottom: 8px;
-}
-
-.auth-header p {
-    color: var(--text-secondary);
 }
 
 /* Bottom Navigation */
@@ -113,10 +89,11 @@ main {
     background-color: var(--surface-color);
     display: flex;
     justify-content: space-around;
-    padding: 8px 0;
-    box-shadow: 0 -1px 3px rgba(0,0,0,0.05);
+    padding: 10px 0;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
     z-index: 10;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-color);
 }
 
 .nav-item {
@@ -126,15 +103,16 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     padding: 8px 16px;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .nav-item.active {
     color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .nav-icon {
@@ -145,20 +123,21 @@ main {
 .view-title {
     margin-bottom: 16px;
     color: var(--primary-color);
+    font-weight: 700;
 }
 
-/* Digital Library Map */
+/* Maps and generic layouts */
 .library-map-wrapper {
     background: var(--surface-color);
     padding: 24px 16px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .library-map {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 .map-row {
@@ -169,15 +148,16 @@ main {
 
 .map-shelf {
     flex: 1;
-    height: 80px;
-    border-radius: 8px;
+    height: 90px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 15px;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
 .bg-fiction { background-color: var(--c-fiction); }
@@ -187,21 +167,23 @@ main {
 .bg-children { background-color: var(--c-children); }
 
 .map-aisle {
-    height: 40px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
     font-size: 14px;
+    font-weight: 600;
     letter-spacing: 2px;
-    background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);
+    background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 20px);
+    border-radius: 8px;
 }
 
 .map-entrance {
     text-align: center;
     padding-top: 24px;
-    font-weight: bold;
+    font-weight: 700;
     color: var(--primary-color);
-    border-top: 2px dashed var(--primary-light);
+    border-top: 2px dashed var(--border-color);
     margin-top: 16px;
 }
