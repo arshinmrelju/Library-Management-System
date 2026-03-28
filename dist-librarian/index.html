@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Navodaya Admin - Librarian</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .req-card {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .req-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .req-user {
+            color: var(--primary-color);
+            font-weight: 800;
+        }
+
+        .req-info {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .edit-book-btn {
+            background: #eff6ff;
+            color: #2563eb;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .delete-book-btn {
+            background: #fff1f2;
+            color: #e11d48;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Admin Login Screen -->
+    <div id="admin-login-screen" class="login-container">
+        <div class="login-box" style="padding: 40px; border-radius: 24px; box-shadow: var(--shadow-lg);">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔑</div>
+            <h2 style="color:var(--primary-color); margin-bottom:12px; font-weight: 800; letter-spacing: -1px; font-size: 28px;">Librarian Portal</h2>
+            <p style="color:var(--text-secondary); margin-bottom: 32px; font-size: 15px;">Enter your admin password to manage inventory and requests.</p>
+            
+            <form id="admin-login-form">
+                <div class="input-group">
+                    <label style="text-align:left;">Admin Password</label>
+                    <input type="password" id="admin-password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" style="padding: 16px;">Access Dashboard</button>
+            </form>
+            <a href="index.html"
+                style="display:block; margin-top:32px; color:var(--text-muted); text-decoration:none; font-size:13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">&larr;
+                Public Library</a>
+        </div>
+    </div>
+
+    <!-- Admin dashboard container (hidden by default) -->
+    <div id="admin-app" style="display: none; height: 100vh; flex-direction: column;">
+        <header class="app-header admin-header" style="flex-shrink:0;">
+            <div class="header-actions">
+                <h1 class="app-title" id="header-title">Admin Dashboard</h1>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </header>
+
+        <main id="app-content" style="flex-grow:1; overflow-y:auto; padding-bottom:70px;">
+            <!-- Dashboard/Requests View -->
+            <section id="requests-view" class="view active-view">
+                <h2 class="view-title">Pending Requests</h2>
+                <div id="pending-list" class="book-list"></div>
+
+                <h2 class="view-title" style="margin-top: 24px;">Active Borrows</h2>
+                <div id="borrowed-list" class="book-list"></div>
+            </section>
+
+            <!-- Inventory View -->
+            <section id="inventory-view" class="view">
+                <h2 class="view-title">Manage Books</h2>
+                <button class="btn btn-primary" style="margin-bottom: 16px;" onclick="openBookForm()">+ Add New
+                    Book</button>
+
+                <div id="book-form-container"
+                    style="display:none; background:white; padding:16px; border-radius:8px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <h3 id="book-form-title">New Book</h3>
+                    <input type="hidden" id="edit-book-id">
+                    <input type="text" id="new-title" placeholder="Book Title" class="search-input"
+                        style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
+                    <input type="text" id="new-author" placeholder="Author" class="search-input"
+                        style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
+
+                    <!-- Location Inputs -->
+                    <input type="text" id="new-section" placeholder="Section (e.g. Fiction)" class="search-input"
+                        style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
+                    <input type="text" id="new-shelf" placeholder="Shelf (e.g. A-1)" class="search-input"
+                        style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
+                    <input type="text" id="new-row" placeholder="Row (Optional, e.g. Top)" class="search-input"
+                        style="border-bottom: 1px solid #ccc; margin-bottom: 16px; width:100%;">
+
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-primary" style="padding:10px 16px;" onclick="saveBook()">Save</button>
+                        <button class="btn" style="padding:10px 16px; background:#f5f5f5;"
+                            onclick="closeBookForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="inventory-list" class="book-list"></div>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="requests-view">
+                <span class="nav-icon">📋</span>
+                <span>Requests</span>
+            </button>
+            <button class="nav-item" data-target="inventory-view">
+                <span class="nav-icon">📚</span>
+                <span>Inventory</span>
+            </button>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initAdmin } from './js/admin.js';
+        document.addEventListener('DOMContentLoaded', initAdmin);
+    </script>
+</body>
+
+</html>
