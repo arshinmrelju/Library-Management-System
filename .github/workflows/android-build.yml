@@ -26,6 +26,13 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Prepare Web Assets
+        run: |
+          mkdir dist-librarian
+          cp -r css dist-librarian/
+          cp -r js dist-librarian/
+          cp admin.html dist-librarian/index.html
+
       - name: Sync Capacitor
         run: npx cap sync
 
