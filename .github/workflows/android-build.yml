@@ -28,6 +28,7 @@ jobs:
 
       - name: Prepare Web Assets
         run: |
+          rm -rf dist-librarian
           mkdir dist-librarian
           cp -r css dist-librarian/
           cp -r js dist-librarian/
