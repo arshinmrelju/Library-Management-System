@@ -22,7 +22,8 @@ const navItems = document.querySelectorAll('.nav-item');
 
 let libraryData = {
     books: [],
-    requests: []
+    requests: [],
+    members: []
 };
 
 export function initAdmin() {
@@ -92,8 +93,16 @@ function setupDataListeners() {
     const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
         libraryData.requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderRequests();
-        renderBorrows();
+        if (currentView === 'requests-view') {
+            renderRequests();
+            renderBorrows();
+        }
+    });
+
+    const mq = query(collection(db, "members"), orderBy("timestamp", "desc"));
+    onSnapshot(mq, (snapshot) => {
+        libraryData.members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (currentView === 'members-view') renderMembers();
     });
 }
 
@@ -105,8 +114,10 @@ function navigateTo(viewId) {
     if (viewId === 'requests-view') {
         renderRequests();
         renderBorrows();
-    } else {
+    } else if (viewId === 'inventory-view') {
         renderInventory();
+    } else if (viewId === 'members-view') {
+        renderMembers();
     }
 }
 window.navigateTo = navigateTo;
@@ -180,6 +191,91 @@ function renderBorrows() {
     });
     lucide.createIcons();
 }
+
+function renderMembers() {
+    const pendingList = document.getElementById('pending-members-list');
+    const approvedList = document.getElementById('approved-members-list');
+    if (!pendingList || !approvedList) return;
+    pendingList.innerHTML = '';
+    approvedList.innerHTML = '';
+
+    const pendings = libraryData.members.filter(m => m.status === 'pending');
+    const approved = libraryData.members.filter(m => m.status === 'approved');
+
+    if (pendings.length === 0) {
+        pendingList.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No pending applications.</p>';
+    } else {
+        pendings.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'book-card req-card';
+            card.innerHTML = `
+                <div class="req-header">
+                    <span class="req-user">${m.name}</span>
+                    <span>${m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleDateString() : 'New'}</span>
+                </div>
+                <div class="req-info" style="margin-bottom:20px;">
+                    <div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%;"><i data-lucide="user" style="width:24px; height:24px;"></i></div>
+                    <div class="book-info">
+                        <p style="font-size:14px; margin:0;">Phone: ${m.phone}</p>
+                        <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">Address: ${m.address}</p>
+                    </div>
+                </div>
+                <div class="req-actions" style="display:flex; gap:12px;">
+                    <button class="btn btn-success" style="flex:1; padding:12px; font-weight:700;" onclick="approveMember('${m.id}')">Approve</button>
+                    <button class="btn btn-danger-soft" style="flex:1; padding:12px; font-weight:700;" onclick="rejectMember('${m.id}')">Reject</button>
+                </div>
+            `;
+            pendingList.appendChild(card);
+        });
+    }
+
+    if (approved.length === 0) {
+        approvedList.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No approved members yet.</p>';
+    } else {
+        approved.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'book-card req-card';
+            card.innerHTML = `
+                <div class="req-header">
+                    <span class="req-user">${m.name}</span>
+                    <span style="color:var(--success-color);">Active</span>
+                </div>
+                <div class="req-info">
+                    <div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%;"><i data-lucide="id-card" style="width:24px; height:24px;"></i></div>
+                    <div class="book-info">
+                        <p style="font-size:14px; margin:0; font-weight:bold;">ID: ${m.memberId}</p>
+                        <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">Phone: ${m.phone}</p>
+                    </div>
+                </div>
+            `;
+            approvedList.appendChild(card);
+        });
+    }
+    lucide.createIcons();
+}
+
+window.approveMember = async function(id) {
+    const randDigits = Math.floor(1000 + Math.random() * 9000);
+    const mId = "NYD-" + randDigits;
+    try {
+        await updateDoc(doc(db, "members", id), {
+            status: 'approved',
+            memberId: mId
+        });
+    } catch(e) {
+        console.error("Error approving:", e);
+    }
+};
+
+window.rejectMember = async function(id) {
+    if (confirm("Reject this application?")) {
+        try {
+            await deleteDoc(doc(db, "members", id));
+        } catch(e) {
+            console.error(e);
+        }
+    }
+};
 
 async function updateRequestStatus(reqId, newStatus, bookId) {
     try {

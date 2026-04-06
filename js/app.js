@@ -17,7 +17,8 @@ let pendingRequestBookId = null;
 
 let libraryData = {
     books: [],
-    requests: []
+    requests: [],
+    member: null
 };
 
 // DOM Elements
@@ -56,6 +57,17 @@ function setupFirestoreListeners() {
             }));
             if (currentView === 'library-view') renderLibraryView();
             if (currentView === 'my-books-view') renderMyBooksView();
+        });
+
+        // Listen for membership (user specific)
+        const mq = query(collection(db, "members"), where("phone", "==", currentUser.phone));
+        onSnapshot(mq, (snapshot) => {
+            if (!snapshot.empty) {
+                libraryData.member = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+            } else {
+                libraryData.member = null;
+            }
+            if (currentView === 'membership-view') renderMembershipView();
         });
     }
 }
@@ -140,6 +152,9 @@ function navigateTo(viewId, action = null) {
         } else {
             renderMyBooksView();
         }
+    } else if (viewId === 'membership-view') {
+        headerTitle.textContent = 'Library Card';
+        renderMembershipView();
     }
 }
 
@@ -300,6 +315,130 @@ window.logoutUser = function () {
 // Export to window for inline onclick handlers
 window.navigateTo = navigateTo;
 window.updateNavActive = updateNavActive;
+
+window.applyMembership = async function(e) {
+    if (e) e.preventDefault();
+    const name = document.getElementById('mem-name').value;
+    const phone = document.getElementById('mem-phone').value;
+    const address = document.getElementById('mem-address').value;
+
+    if (!currentUser) {
+        currentUser = { name, phone };
+        localStorage.setItem('nayodayam_user', JSON.stringify(currentUser));
+        setupFirestoreListeners();
+    }
+
+    try {
+        await addDoc(collection(db, "members"), {
+            name: name,
+            phone: phone,
+            address: address,
+            status: 'pending',
+            timestamp: serverTimestamp()
+        });
+        alert('Application submitted successfully!');
+        
+        if (!libraryData.member) {
+            libraryData.member = { status: 'pending' };
+            renderMembershipView();
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Error submitting application. Check Firebase connection.');
+    }
+};
+
+function renderMembershipView() {
+    const container = document.getElementById('membership-content');
+    if (!currentUser || !libraryData.member) {
+        let defaultName = currentUser ? currentUser.name : '';
+        let defaultPhone = currentUser ? currentUser.phone : '';
+        let phoneStyle = currentUser ? 'readonly style="background:#f1f5f9; color:var(--text-muted);"' : 'pattern="[0-9]{10}" placeholder="10-digit number"';
+
+        container.innerHTML = `
+            <div class="glass" style="padding: 24px; border-radius: var(--radius-lg);">
+                <div style="text-align:center; margin-bottom:24px;">
+                    <i data-lucide="user-plus" style="width:48px; height:48px; color:var(--primary-color);"></i>
+                    <h3 style="margin-top:12px; color:var(--primary-color);">Apply for Membership</h3>
+                    <p style="color:var(--text-secondary); font-size:14px;">Join the library to borrow books easily.</p>
+                </div>
+                <form id="membership-form" onsubmit="applyMembership(event)">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="mem-name" value="${defaultName}" placeholder="Your Full Name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="mem-phone" value="${defaultPhone}" required ${phoneStyle}>
+                    </div>
+                    <div class="input-group">
+                        <label>Address</label>
+                        <input type="text" id="mem-address" placeholder="e.g. 123 Main St..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" style="padding: 16px;">Submit Application</button>
+                </form>
+            </div>
+        `;
+    } else if (libraryData.member.status === 'pending') {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="color: var(--secondary-color); margin-bottom: 16px;">
+                    <i data-lucide="clock" style="width: 64px; height: 64px;"></i>
+                </div>
+                <h3 style="color:var(--primary-color); font-size:24px; margin-bottom:8px;">Application Pending</h3>
+                <p style="color:var(--text-secondary);">Your membership is currently under review by the librarian. Please check back later.</p>
+            </div>
+        `;
+    } else if (libraryData.member.status === 'approved') {
+        const m = libraryData.member;
+        container.innerHTML = `
+            <div style="background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position:relative; overflow:hidden; margin-top:20px;">
+                <div style="position:absolute; top:-20%; right:-10%; width:150px; height:150px; background:rgba(255,255,255,0.05); border-radius:50%;"></div>
+                <div style="position:absolute; bottom:-10%; left:-10%; width:100px; height:100px; background:rgba(255,255,255,0.05); border-radius:50%;"></div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 32px; position:relative; z-index:1;">
+                    <div>
+                        <h4 style="font-size: 11px; opacity:0.8; text-transform:uppercase; letter-spacing:2px; margin:0; margin-bottom:4px;">Nayodayam Library</h4>
+                        <h2 style="margin:0; font-size: 20px; font-weight:800; letter-spacing:-0.5px;">Membership Card</h2>
+                    </div>
+                    <i data-lucide="library" style="width:36px; height:36px; opacity:0.9;"></i>
+                </div>
+                
+                <div style="margin-bottom:28px; position:relative; z-index:1;">
+                    <p style="font-size:11px; opacity:0.7; margin:0; text-transform:uppercase; letter-spacing:1px;">Member Name</p>
+                    <p style="font-size:24px; font-weight:700; margin:0; letter-spacing:-0.5px;">${m.name}</p>
+                </div>
+                
+                <div style="background:white; padding: 16px; border-radius: 12px; text-align:center; position:relative; z-index:1;">
+                    <svg id="barcode"></svg>
+                </div>
+                
+                <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; font-size:11px; opacity:0.8; position:relative; z-index:1;">
+                    <span style="font-weight:700; letter-spacing:1px;">ID: ${m.memberId || 'N/A'}</span>
+                    <span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:12px;">Valid Lifetime</span>
+                </div>
+            </div>
+            
+            <div style="margin-top:24px; text-align:center; padding:16px; border:1px solid var(--border-color); border-radius:12px; background:white;">
+                <p style="color:var(--text-secondary); font-size:14px; margin-bottom:8px;"><i data-lucide="info" style="width:16px; height:16px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> Show this card at the checkout counter.</p>
+            </div>
+        `;
+        setTimeout(() => {
+            if (window.JsBarcode && m.memberId) {
+                JsBarcode("#barcode", m.memberId, {
+                    format: "CODE128",
+                    width: 2,
+                    height: 50,
+                    displayValue: false,
+                    background: "#ffffff",
+                    lineColor: "#0f172a",
+                    margin: 0
+                });
+            }
+        }, 150);
+    }
+    lucide.createIcons();
+}
 
 async function processRequestBook(bookId) {
     const book = libraryData.books.find(b => b.id === bookId);
