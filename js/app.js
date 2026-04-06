@@ -107,12 +107,15 @@ function navigateTo(viewId, action = null) {
     const header = document.getElementById('app-header');
     const bottomNav = document.getElementById('bottom-nav');
 
+    const appContent = document.getElementById('app-content');
     if (viewId === 'welcome-view') {
-        header.style.display = 'none';
+        header.style.display = 'grid';
         bottomNav.style.display = 'none';
+        appContent.style.paddingTop = 'calc(70px + env(safe-area-inset-top))';
     } else {
         header.style.display = 'grid';
         bottomNav.style.display = 'flex';
+        appContent.style.paddingTop = ''; // Revert to CSS default
     }
 
     if (viewId === 'library-view') {
