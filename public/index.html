@@ -114,7 +114,7 @@
                 <h2 class="welcome-title"><span>Welcome to</span>Nayodayam Library</h2>
                 
                 <div style="width:100%; display:flex; flex-direction:column; gap:16px; max-width:400px;">
-                    <button class="btn btn-primary w-100" style="padding:20px; font-size:18px;" onclick="navigateTo('library-view')">
+                    <button class="btn btn-primary w-100" style="padding:20px; font-size:18px;" onclick="navigateTo('genre-selection-view')">
                         <i data-lucide="library"></i> Browse Books
                     </button>
                     <button class="btn glass w-100" style="padding:20px; font-size:18px; color:var(--primary-color); font-weight:700;" onclick="navigateTo('map-view')">
@@ -131,16 +131,50 @@
             </div>
         </section>
 
-        <!-- Library Catalog View -->
-        <section id="library-view" class="view">
-            <h2 class="view-title">Browse Library</h2>
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Search by title or author..." class="search-input">
+        <!-- Genre Selection View [NEW] -->
+        <section id="genre-selection-view" class="view">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h2 class="view-title" style="margin-bottom: 8px;">Explore Our Collections</h2>
+                <p style="color: var(--text-secondary); font-size: 15px;">Which genre do you prefer today?</p>
             </div>
-            <div id="book-list" class="book-list">
-                <!-- Books injected by JS -->
+            <div class="genre-grid" id="genre-grid">
+                <div class="genre-card" onclick="selectGenre('Novel', 'book-open')">
+                    <div class="genre-icon"><i data-lucide="book-open"></i></div>
+                    <span class="genre-name">Novels</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Fiction', 'sparkles')">
+                    <div class="genre-icon"><i data-lucide="sparkles"></i></div>
+                    <span class="genre-name">Fiction</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Non-Fiction', 'info')">
+                    <div class="genre-icon"><i data-lucide="info"></i></div>
+                    <span class="genre-name">Non-Fiction</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Science', 'flask-conical')">
+                    <div class="genre-icon"><i data-lucide="flask-conical"></i></div>
+                    <span class="genre-name">Science</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('History', 'landmark')">
+                    <div class="genre-icon"><i data-lucide="landmark"></i></div>
+                    <span class="genre-name">History</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Children', 'users')">
+                    <div class="genre-icon"><i data-lucide="users"></i></div>
+                    <span class="genre-name">Children</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('All', 'layers')" style="grid-column: span 2; background: var(--primary-color); color: white;">
+                    <div class="genre-icon" style="color: white; opacity: 0.9;"><i data-lucide="layers"></i></div>
+                    <span class="genre-name">Browse All Collections</span>
+                </div>
             </div>
         </section>
+
+        <!-- Library Catalog View -->
+        <section id="library-view" class="view">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 class="view-title" id="library-view-title" style="margin:0;">Library Books</h2>
+                <button class="btn glass" onclick="navigateTo('genre-selection-view')" style="padding: 8px 12px; font-size: 12px;"><i data-lucide="layout-grid" style="width:16px;"></i> Genres</button>
+            </div>
 
         <!-- Digital Library Map View -->
         <section id="map-view" class="view">

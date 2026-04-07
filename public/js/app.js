@@ -5,6 +5,8 @@ import {
     onSnapshot,
     query,
     where,
+    limit,
+    orderBy,
     doc,
     getDoc,
     updateDoc,
@@ -24,7 +26,9 @@ let pendingRequestBookId = null;
 let libraryData = {
     books: [],
     requests: [],
-    member: null
+    member: null,
+    isLoading: true,
+    errorMessage: null // Track errors
 };
 
 // DOM Elements
@@ -64,14 +68,25 @@ export function initApp() {
 }
 
 function setupFirestoreListeners() {
-    // Listen for books
-    onSnapshot(collection(db, "books"), (snapshot) => {
+    // Initial fetch: Limit to 100 newest books for performance
+    const booksQuery = query(collection(db, "books"), orderBy("last_updated", "desc"), limit(100));
+    onSnapshot(booksQuery, (snapshot) => {
+        console.log("Books initial batch received:", snapshot.size);
         libraryData.books = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
+        libraryData.isLoading = false;
+        libraryData.errorMessage = null;
         if (currentView === 'library-view') renderLibraryView();
         if (currentView === 'my-books-view') renderMyBooksView();
+    }, (error) => {
+        console.error("Error fetching books:", error);
+        libraryData.isLoading = false;
+        libraryData.errorMessage = error.message.includes('permission') 
+            ? "Firebase: Missing or insufficient permissions. Please check your Firestore rules."
+            : "Firebase Error: " + error.message;
+        if (currentView === 'library-view') renderLibraryView();
     });
 
     // Listen for requests (user specific if logged in)
@@ -114,8 +129,22 @@ function setupEventListeners() {
         });
     });
 
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        renderLibraryView(e.target.value.toLowerCase());
+    document.getElementById('search-input').addEventListener('input', async (e) => {
+        const term = e.target.value;
+        if (term.length > 2) {
+            // Perform server-side prefix search for performance
+            const q = query(
+                collection(db, "books"), 
+                where("title", ">=", term), 
+                where("title", "<=", term + '\uf8ff'),
+                limit(50)
+            );
+            const snapshot = await getDocs(q);
+            const results = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+            renderLibraryView(term, results);
+        } else {
+            renderLibraryView(term);
+        }
     });
 
     document.getElementById('back-to-library').addEventListener('click', () => {
@@ -136,21 +165,25 @@ function setupEventListeners() {
 
 function navigateTo(viewId, action = null) {
     views.forEach(view => view.classList.remove('active-view'));
-    document.getElementById(viewId).classList.add('active-view');
+    const target = document.getElementById(viewId);
+    if (target) target.classList.add('active-view');
     currentView = viewId;
 
     const header = document.getElementById('app-header');
     const bottomNav = document.getElementById('bottom-nav');
 
-    const appContent = document.getElementById('app-content');
     if (viewId === 'welcome-view') {
-        header.style.display = 'grid';
-        bottomNav.style.display = 'none';
-        appContent.style.paddingTop = 'calc(70px + env(safe-area-inset-top))';
+        if (header) header.style.display = 'none';
+        if (bottomNav) bottomNav.style.display = 'none';
+        document.body.style.paddingTop = '0';
+    } else if (viewId === 'genre-selection-view') {
+        if (header) header.style.display = 'flex';
+        if (bottomNav) bottomNav.style.display = 'none';
+        document.body.style.paddingTop = '70px';
     } else {
-        header.style.display = 'grid';
-        bottomNav.style.display = 'flex';
-        appContent.style.paddingTop = ''; // Revert to CSS default
+        if (header) header.style.display = 'grid';
+        if (bottomNav) bottomNav.style.display = 'flex';
+        document.body.style.paddingTop = '70px'; // Revert to CSS default
     }
 
     if (viewId === 'library-view') {
@@ -191,28 +224,42 @@ function updateNavActive(viewId) {
     });
 }
 
-function renderLibraryView(searchQuery = '') {
+function renderLibraryView(searchQuery = '', serverResults = null) {
     const listContainer = document.getElementById('book-list');
     listContainer.innerHTML = '';
 
-    const booksToRender = libraryData.books.filter(book => {
-        const titleMatch = book.title?.toLowerCase().includes(searchQuery);
-        const authorMatch = book.author?.toLowerCase().includes(searchQuery);
-        const sectionMatch = (book.section || book.category)?.toLowerCase().includes(searchQuery);
-        const shelfMatch = (book.shelf_number || book.shelf)?.toLowerCase().includes(searchQuery);
-        return titleMatch || authorMatch || sectionMatch || shelfMatch;
+    // If serverResults specifically provided, use them. Otherwise use the standard libraryData.books.
+    const sourceBooks = serverResults || libraryData.books;
+
+    const booksToRender = sourceBooks.filter(book => {
+        if (serverResults) return true; // Already filtered by server
+        if (!searchQuery) return true; // Show all if no search
+
+        const titleMatch = book.title?.toLowerCase().includes(searchQuery.toLowerCase());
+        const authorMatch = book.author?.toLowerCase().includes(searchQuery.toLowerCase());
+        return titleMatch || authorMatch;
     });
 
-    if (booksToRender.length === 0 && libraryData.books.length > 0) {
-        listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 20px;">No books found.</p>';
-        return;
-    } else if (libraryData.books.length === 0) {
+    if (libraryData.isLoading) {
         listContainer.innerHTML = `
             <div class="loading-spinner">
                 <div class="spinner"></div>
                 <p>Curating your library...</p>
             </div>
         `;
+        return;
+    } else if (libraryData.errorMessage) {
+        listContainer.innerHTML = `
+            <div style="text-align: center; color: #e11d48; margin-top: 40px; padding: 20px; background: rgba(225, 29, 72, 0.05); border-radius: 12px; border: 1px solid rgba(225, 29, 72, 0.1);">
+                <i data-lucide="shield-alert" style="width: 32px; height: 32px; margin-bottom: 12px;"></i>
+                <p style="font-weight:700;">Data Sync Issue</p>
+                <p style="font-size: 14px; margin-top: 4px;">${libraryData.errorMessage}</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    } else if (booksToRender.length === 0) {
+        listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 20px;">' + (searchQuery ? 'No books found for this search.' : 'No books available in the catalog yet.') + '</p>';
         return;
     }
 
@@ -362,6 +409,44 @@ window.logoutUser = async function () {
 // Export to window for inline onclick handlers
 window.navigateTo = navigateTo;
 window.updateNavActive = updateNavActive;
+
+window.selectGenre = async function(genre, icon) {
+    const listTitle = document.getElementById('library-view-title');
+    if (listTitle) {
+        listTitle.innerHTML = `<button class="header-action" onclick="navigateTo('genre-selection-view')" style="background:none; border:none; color:inherit; padding:0; cursor:pointer;"><i data-lucide="${icon}" style="width:20px; vertical-align:middle; margin-right:8px;"></i> ${genre} Collection</button>`;
+    }
+    
+    libraryData.isLoading = true;
+    navigateTo('library-view');
+    
+    try {
+        let q;
+        if (genre === 'All') {
+            q = query(collection(db, "books"), orderBy("last_updated", "desc"), limit(100));
+        } else {
+            q = query(
+                collection(db, "books"), 
+                where("category", "==", genre), 
+                orderBy("last_updated", "desc"), 
+                limit(100)
+            );
+        }
+        
+        const snapshot = await getDocs(q);
+        const results = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+        console.log(`Genre ${genre} fetch successful:`, results.length);
+        
+        libraryData.books = results;
+        libraryData.isLoading = false;
+        renderLibraryView();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    } catch (error) {
+        console.error("Error fetching genre:", error);
+        libraryData.errorMessage = "Failed to load " + genre + ". " + error.message;
+        libraryData.isLoading = false;
+        renderLibraryView();
+    }
+};
 
 window.applyMembership = async function (e) {
     if (e) e.preventDefault();

@@ -13,6 +13,7 @@ import {
     deleteDoc, 
     serverTimestamp,
     orderBy,
+    limit,
     query
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -81,13 +82,18 @@ function setupListeners() {
 }
 
 function setupDataListeners() {
-    onSnapshot(collection(db, "books"), (snapshot) => {
+    const booksQuery = query(collection(db, "books"), orderBy("last_updated", "desc"), limit(100));
+    onSnapshot(booksQuery, (snapshot) => {
+        console.log("Admin: Books initial batch received:", snapshot.size);
         libraryData.books = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (currentView === 'inventory-view') renderInventory();
         else {
             renderRequests();
             renderBorrows();
         }
+    }, (error) => {
+        console.error("Admin: Error fetching books:", error);
+        alert("Firebase Data Sync Error: " + error.message + (error.message.includes('permission') ? "\n\nTip: Check your Firestore Security Rules." : ""));
     });
 
     const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
