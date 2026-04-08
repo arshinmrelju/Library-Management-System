@@ -11,7 +11,8 @@ import {
     getDoc,
     updateDoc,
     getDocs,
-    serverTimestamp
+    serverTimestamp,
+    startAfter
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     signInWithPopup,
@@ -28,7 +29,11 @@ let libraryData = {
     requests: [],
     member: null,
     isLoading: true,
-    errorMessage: null // Track errors
+    errorMessage: null,
+    lastVisible: null,
+    hasMore: true,
+    currentGenre: 'All',
+    isNextPageLoading: false
 };
 
 // DOM Elements
@@ -68,26 +73,8 @@ export function initApp() {
 }
 
 function setupFirestoreListeners() {
-    // Initial fetch: Limit to 100 newest books for performance
-    const booksQuery = query(collection(db, "books"), orderBy("last_updated", "desc"), limit(100));
-    onSnapshot(booksQuery, (snapshot) => {
-        console.log("Books initial batch received:", snapshot.size);
-        libraryData.books = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        libraryData.isLoading = false;
-        libraryData.errorMessage = null;
-        if (currentView === 'library-view') renderLibraryView();
-        if (currentView === 'my-books-view') renderMyBooksView();
-    }, (error) => {
-        console.error("Error fetching books:", error);
-        libraryData.isLoading = false;
-        libraryData.errorMessage = error.message.includes('permission') 
-            ? "Firebase: Missing or insufficient permissions. Please check your Firestore rules."
-            : "Firebase Error: " + error.message;
-        if (currentView === 'library-view') renderLibraryView();
-    });
+    // Initial fetch: Load first 10 books
+    fetchBooksBatch();
 
     // Listen for requests (user specific if logged in)
     if (currentUser) {
@@ -132,6 +119,8 @@ function setupEventListeners() {
     document.getElementById('search-input').addEventListener('input', async (e) => {
         const term = e.target.value;
         if (term.length > 2) {
+            // Reset pagination for search
+            libraryData.hasMore = false; 
             // Perform server-side prefix search for performance
             const q = query(
                 collection(db, "books"), 
@@ -143,7 +132,14 @@ function setupEventListeners() {
             const results = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
             renderLibraryView(term, results);
         } else {
-            renderLibraryView(term);
+            // Restore from libraryData.books if search is cleared
+            // But we might want to re-fetch if they cleared search to get original pagination back
+            if (term.length === 0) {
+                resetPagination();
+                fetchBooksBatch();
+            } else {
+                renderLibraryView(term);
+            }
         }
     });
 
@@ -314,6 +310,33 @@ function renderLibraryView(searchQuery = '', serverResults = null) {
 
         listContainer.appendChild(card);
     });
+
+    // Add Load More button
+    if (libraryData.hasMore && !searchQuery) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'btn btn-load-more w-100';
+        loadMoreBtn.style.marginTop = '20px';
+        loadMoreBtn.style.marginBottom = '20px';
+        
+        if (libraryData.isNextPageLoading) {
+            loadMoreBtn.innerHTML = '<span class="spinner-small"></span> Loading...';
+            loadMoreBtn.disabled = true;
+        } else {
+            loadMoreBtn.innerHTML = '<i data-lucide="plus-circle"></i> Load More Books';
+            loadMoreBtn.onclick = loadMoreBooks;
+        }
+        
+        listContainer.appendChild(loadMoreBtn);
+    } else if (!libraryData.hasMore && libraryData.books.length > 0 && !searchQuery) {
+        const endMessage = document.createElement('p');
+        endMessage.style.textAlign = 'center';
+        endMessage.style.color = 'var(--text-muted)';
+        endMessage.style.fontSize = '12px';
+        endMessage.style.margin = '32px 0';
+        endMessage.innerHTML = 'You\'ve reached the end of the collection.';
+        listContainer.appendChild(endMessage);
+    }
+
     lucide.createIcons();
 }
 
@@ -378,6 +401,69 @@ function showBookDetail(book, myRequest) {
     lucide.createIcons();
 }
 
+window.resetPagination = function() {
+    libraryData.books = [];
+    libraryData.lastVisible = null;
+    libraryData.hasMore = true;
+    libraryData.isLoading = true;
+    libraryData.errorMessage = null;
+};
+
+window.fetchBooksBatch = async function() {
+    const batchSize = 10;
+    try {
+        let q;
+        if (libraryData.currentGenre === 'All') {
+            q = query(
+                collection(db, "books"), 
+                orderBy("last_updated", "desc"), 
+                limit(batchSize)
+            );
+        } else {
+            q = query(
+                collection(db, "books"), 
+                where("category", "==", libraryData.currentGenre), 
+                orderBy("last_updated", "desc"), 
+                limit(batchSize)
+            );
+        }
+
+        if (libraryData.lastVisible) {
+            q = query(q, startAfter(libraryData.lastVisible));
+        }
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            libraryData.hasMore = false;
+        } else {
+            const newBooks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            libraryData.books = [...libraryData.books, ...newBooks];
+            libraryData.lastVisible = snapshot.docs[snapshot.docs.length - 1];
+            
+            if (snapshot.docs.length < batchSize) {
+                libraryData.hasMore = false;
+            }
+        }
+
+        libraryData.isLoading = false;
+        libraryData.isNextPageLoading = false;
+        renderLibraryView();
+    } catch (error) {
+        console.error("Error fetching books:", error);
+        libraryData.isLoading = false;
+        libraryData.errorMessage = error.message;
+        renderLibraryView();
+    }
+};
+
+window.loadMoreBooks = function() {
+    if (libraryData.isNextPageLoading || !libraryData.hasMore) return;
+    libraryData.isNextPageLoading = true;
+    renderLibraryView();
+    fetchBooksBatch();
+};
+
 window.handleRequestAction = function (bookId) {
     if (!currentUser) {
         pendingRequestBookId = bookId;
@@ -416,36 +502,11 @@ window.selectGenre = async function(genre, icon) {
         listTitle.innerHTML = `<button class="header-action" onclick="navigateTo('genre-selection-view')" style="background:none; border:none; color:inherit; padding:0; cursor:pointer;"><i data-lucide="${icon}" style="width:20px; vertical-align:middle; margin-right:8px;"></i> ${genre} Collection</button>`;
     }
     
-    libraryData.isLoading = true;
+    libraryData.currentGenre = genre;
+    resetPagination();
     navigateTo('library-view');
     
-    try {
-        let q;
-        if (genre === 'All') {
-            q = query(collection(db, "books"), orderBy("last_updated", "desc"), limit(100));
-        } else {
-            q = query(
-                collection(db, "books"), 
-                where("category", "==", genre), 
-                orderBy("last_updated", "desc"), 
-                limit(100)
-            );
-        }
-        
-        const snapshot = await getDocs(q);
-        const results = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
-        console.log(`Genre ${genre} fetch successful:`, results.length);
-        
-        libraryData.books = results;
-        libraryData.isLoading = false;
-        renderLibraryView();
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    } catch (error) {
-        console.error("Error fetching genre:", error);
-        libraryData.errorMessage = "Failed to load " + genre + ". " + error.message;
-        libraryData.isLoading = false;
-        renderLibraryView();
-    }
+    fetchBooksBatch();
 };
 
 window.applyMembership = async function (e) {

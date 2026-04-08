@@ -355,3 +355,35 @@
     color: var(--text-primary);
     text-align: center;
 }
+
+/* Pagination & Load More */
+.btn-load-more {
+    background: white;
+    color: var(--primary-color);
+    border: 1.5px solid var(--primary-light);
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+}
+
+.btn-load-more:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.spinner-small {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(14, 116, 144, 0.2);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
