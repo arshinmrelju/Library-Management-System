@@ -30,9 +30,9 @@ jobs:
         run: |
           rm -rf dist-librarian
           mkdir dist-librarian
-          cp admin.html dist-librarian/index.html
-          cp -r css dist-librarian/
-          cp -r js dist-librarian/
+          cp public/admin.html dist-librarian/index.html
+          cp -r public/css dist-librarian/
+          cp -r public/js dist-librarian/
           echo "Verified dist-librarian content:"
           ls -R dist-librarian
 
