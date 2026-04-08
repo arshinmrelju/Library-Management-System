@@ -13,8 +13,8 @@
     <link rel="stylesheet" href="css/main.css?v=4">
     <link rel="stylesheet" href="css/components.css?v=4">
     
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons (Versioned for faster loading & caching) -->
+    <script src="https://unpkg.com/lucide@0.363.0"></script>
     
     <style>
         /* Override global main padding since #admin-app handles header offset */
@@ -124,17 +124,28 @@
 
 <body>
 
+    <!-- SVG Symbols for instant icon loading -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+        <symbol id="icon-log-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol>
+        <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+        <symbol id="icon-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="12" r="3"/></symbol>
+        <symbol id="icon-clipboard-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
+        <symbol id="icon-database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></symbol>
+        <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    </svg>
+
     <!-- Top App Bar -->
     <header class="app-header" id="app-header">
-        <button class="header-action" onclick="window.location.href='index.html'" id="header-home-btn"><i data-lucide="home"></i></button>
+        <button class="header-action" onclick="window.location.href='index.html'" id="header-home-btn"><svg class="lucide"><use href="#icon-home"/></svg></button>
         <h1 class="app-title" id="header-title">Nayodayam Admin</h1>
-        <button class="header-action" onclick="logout()" id="header-logout-btn" style="display:none;"><i data-lucide="log-out"></i></button>
+        <button class="header-action" onclick="logout()" id="header-logout-btn" style="display:none;"><svg class="lucide"><use href="#icon-log-out"/></svg></button>
     </header>
 
     <!-- Admin Login Screen -->
     <div id="admin-login-screen" class="login-container">
         <div class="login-box" style="padding: 40px; border-radius: 24px; box-shadow: var(--shadow-lg);">
-            <div style="color:var(--primary-color); margin-bottom: 24px;"><i data-lucide="lock" style="width:48px; height:48px;"></i></div>
+            <div style="color:var(--primary-color); margin-bottom: 24px;"><svg class="lucide" style="width:48px; height:48px;"><use href="#icon-lock"/></svg></div>
             <h2 style="color:var(--primary-color); margin-bottom:12px; font-weight: 800; letter-spacing: -1px; font-size: 28px;">Librarian Portal</h2>
             <p style="color:var(--text-secondary); margin-bottom: 32px; font-size: 15px;">Enter your admin password to manage inventory and requests.</p>
             
@@ -211,7 +222,7 @@
                 <div class="footer-divider"></div>
                 
                 <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><i data-lucide="map-pin" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
+                <p class="footer-location"><svg class="lucide" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"><use href="#icon-map-pin"/></svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
                 
                 <div class="footer-credits">
                     Developed by Dept. of English Interns<br>
@@ -222,15 +233,15 @@
 
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="requests-view">
-                <span class="nav-icon"><i data-lucide="clipboard-list"></i></span>
+                <span class="nav-icon"><svg class="lucide"><use href="#icon-clipboard-list"/></svg></span>
                 <span>Requests</span>
             </button>
             <button class="nav-item" data-target="inventory-view">
-                <span class="nav-icon"><i data-lucide="database"></i></span>
+                <span class="nav-icon"><svg class="lucide"><use href="#icon-database"/></svg></span>
                 <span>Inventory</span>
             </button>
             <button class="nav-item" data-target="members-view">
-                <span class="nav-icon"><i data-lucide="users"></i></span>
+                <span class="nav-icon"><svg class="lucide"><use href="#icon-users"/></svg></span>
                 <span>Members</span>
             </button>
         </nav>

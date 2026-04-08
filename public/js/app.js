@@ -169,17 +169,14 @@ function navigateTo(viewId, action = null) {
     const bottomNav = document.getElementById('bottom-nav');
 
     if (viewId === 'welcome-view') {
-        if (header) header.style.display = 'none';
+        if (header) header.style.display = 'grid';
         if (bottomNav) bottomNav.style.display = 'none';
-        document.body.style.paddingTop = '0';
     } else if (viewId === 'genre-selection-view') {
-        if (header) header.style.display = 'flex';
+        if (header) header.style.display = 'grid';
         if (bottomNav) bottomNav.style.display = 'none';
-        document.body.style.paddingTop = '70px';
     } else {
         if (header) header.style.display = 'grid';
         if (bottomNav) bottomNav.style.display = 'flex';
-        document.body.style.paddingTop = '70px'; // Revert to CSS default
     }
 
     if (viewId === 'library-view') {

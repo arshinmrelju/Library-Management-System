@@ -56,8 +56,6 @@ body {
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Glassmorphism Utility */
@@ -133,7 +131,7 @@ main {
     flex-grow: 1;
     overflow-y: auto;
     position: relative;
-    padding-top: calc(70px + env(safe-area-inset-top));
+    padding-top: calc(64px + env(safe-area-inset-top));
     padding-bottom: calc(100px + env(safe-area-inset-bottom));
     scroll-behavior: smooth;
 }
@@ -141,7 +139,7 @@ main {
 /* Views Management */
 .view {
     display: none;
-    padding: 24px 20px;
+    padding: 12px 20px 24px 20px;
     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
