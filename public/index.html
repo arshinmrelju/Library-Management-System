@@ -144,7 +144,7 @@
             </div>
         </section>
 
-        <!-- Genre Selection View [NEW] -->
+        <!-- Genre Selection View -->
         <section id="genre-selection-view" class="view">
             <div style="text-align: center; margin-bottom: 32px;">
                 <h2 class="view-title" style="margin-bottom: 8px;">Explore Our Collections</h2>
@@ -153,27 +153,35 @@
             <div class="genre-grid" id="genre-grid">
                 <div class="genre-card" onclick="selectGenre('Novel', 'book-open')">
                     <div class="genre-icon"><i data-lucide="book-open"></i></div>
-                    <span class="genre-name">Novels</span>
+                    <span class="genre-name">Novel</span>
                 </div>
-                <div class="genre-card" onclick="selectGenre('Fiction', 'sparkles')">
-                    <div class="genre-icon"><i data-lucide="sparkles"></i></div>
-                    <span class="genre-name">Fiction</span>
+                <div class="genre-card" onclick="selectGenre('Stories', 'scroll')">
+                    <div class="genre-icon"><i data-lucide="scroll"></i></div>
+                    <span class="genre-name">Stories</span>
                 </div>
-                <div class="genre-card" onclick="selectGenre('Non-Fiction', 'info')">
-                    <div class="genre-icon"><i data-lucide="info"></i></div>
-                    <span class="genre-name">Non-Fiction</span>
+                <div class="genre-card" onclick="selectGenre('Reference', 'search')">
+                    <div class="genre-icon"><i data-lucide="search"></i></div>
+                    <span class="genre-name">Reference</span>
                 </div>
-                <div class="genre-card" onclick="selectGenre('Science', 'flask-conical')">
-                    <div class="genre-icon"><i data-lucide="flask-conical"></i></div>
-                    <span class="genre-name">Science</span>
+                <div class="genre-card" onclick="selectGenre('Poem', 'pen-tool')">
+                    <div class="genre-icon"><i data-lucide="pen-tool"></i></div>
+                    <span class="genre-name">Poem</span>
                 </div>
-                <div class="genre-card" onclick="selectGenre('History', 'landmark')">
-                    <div class="genre-icon"><i data-lucide="landmark"></i></div>
-                    <span class="genre-name">History</span>
-                </div>
-                <div class="genre-card" onclick="selectGenre('Children', 'users')">
+                <div class="genre-card" onclick="selectGenre('Children Literature', 'users')">
                     <div class="genre-icon"><i data-lucide="users"></i></div>
-                    <span class="genre-name">Children</span>
+                    <span class="genre-name">Children Literature</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Literature', 'library')">
+                    <div class="genre-icon"><i data-lucide="library"></i></div>
+                    <span class="genre-name">Literature</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Politics', 'landmark')">
+                    <div class="genre-icon"><i data-lucide="landmark"></i></div>
+                    <span class="genre-name">Politics</span>
+                </div>
+                <div class="genre-card" onclick="selectGenre('Study Materials', 'graduation-cap')">
+                    <div class="genre-icon"><i data-lucide="graduation-cap"></i></div>
+                    <span class="genre-name">Study Materials</span>
                 </div>
                 <div class="genre-card" onclick="selectGenre('All', 'layers')" style="grid-column: span 2; background: var(--primary-color); color: white;">
                     <div class="genre-icon" style="color: white; opacity: 0.9;"><i data-lucide="layers"></i></div>

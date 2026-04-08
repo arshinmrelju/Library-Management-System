@@ -18,6 +18,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentView = 'requests-view';
+let adminCategoryFilter = 'All';
 const views = document.querySelectorAll('.view');
 const navItems = document.querySelectorAll('.nav-item');
 
@@ -79,6 +80,21 @@ function setupListeners() {
             navigateTo(item.dataset.target);
         });
     });
+
+    // Category Filter Chips Listener
+    const filterContainer = document.getElementById('admin-category-filter');
+    if (filterContainer) {
+        filterContainer.addEventListener('click', (e) => {
+            const chip = e.target.closest('.filter-chip');
+            if (!chip) return;
+            
+            filterContainer.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            
+            adminCategoryFilter = chip.dataset.category;
+            renderInventory();
+        });
+    }
 }
 
 function setupDataListeners() {
@@ -150,7 +166,7 @@ function renderRequests() {
                 <div class="book-img-placeholder" style="width:50px; height:70px;"><i data-lucide="book" style="width:24px; height:24px;"></i></div>
                 <div class="book-info">
                     <h3 class="book-title" style="font-size:16px; margin:0;">${req.bookTitle}</h3>
-                    <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">ID: ${req.userPhone}</p>
+                    <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">ID: ${req.userPhone || 'N/A'}</p>
                 </div>
             </div>
             <div class="req-actions" style="display:flex; gap:12px;">
@@ -180,7 +196,7 @@ function renderBorrows() {
         card.className = 'book-card req-card';
         card.innerHTML = `
             <div class="req-header">
-                <span><strong>${req.userName}</strong> (${req.userPhone})</span>
+                <span><strong>${req.userName}</strong> (${req.userPhone || 'N/A'})</span>
                 <span>In Progress</span>
             </div>
             <div class="req-body">
@@ -301,8 +317,19 @@ function renderInventory() {
     const list = document.getElementById('inventory-list');
     list.innerHTML = '';
 
-    libraryData.books.forEach(book => {
-        const section = book.section || book.category || 'N/A';
+    const filteredBooks = libraryData.books.filter(book => {
+        if (adminCategoryFilter === 'All') return true;
+        const bookCat = book.category || book.section || 'Other';
+        return bookCat === adminCategoryFilter;
+    });
+
+    if (filteredBooks.length === 0) {
+        list.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:40px;">No books found in "${adminCategoryFilter}" collection.</p>`;
+        return;
+    }
+
+    filteredBooks.forEach(book => {
+        const category = book.category || book.section || 'N/A';
         const shelf = book.shelf_number || book.shelf || 'N/A';
         
         const card = document.createElement('div');
@@ -317,7 +344,7 @@ function renderInventory() {
                 <h3 class="book-title" style="font-size:16px;">${book.title}</h3>
                 <p class="book-author" style="font-size:13px; margin-bottom:4px;">${book.author}</p>
                 <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
-                    <span style="background:var(--bg-color); padding:2px 6px; border-radius:4px;">${section}</span>
+                    <span style="background:var(--bg-color); padding:2px 6px; border-radius:4px;">${category}</span>
                     <span style="background:var(--bg-color); padding:2px 6px; border-radius:4px;">Shelf ${shelf}</span>
                 </div>
                 <span class="status-badge ${book.available !== false ? 'status-available' : 'status-borrowed'}">
@@ -342,8 +369,12 @@ window.openBookForm = function (bookId = null) {
     const idField = document.getElementById('edit-book-id');
     const titleField = document.getElementById('new-title');
     const authorField = document.getElementById('new-author');
-    const sectionField = document.getElementById('new-section');
     const shelfField = document.getElementById('new-shelf');
+    const rowField = document.getElementById('new-row');
+    const checkboxes = document.querySelectorAll('input[name="category"]');
+
+    // Reset checkboxes
+    checkboxes.forEach(cb => cb.checked = false);
 
     if (bookId) {
         const book = libraryData.books.find(b => b.id === bookId);
@@ -352,16 +383,22 @@ window.openBookForm = function (bookId = null) {
             idField.value = book.id;
             titleField.value = book.title;
             authorField.value = book.author;
-            sectionField.value = book.section || '';
             shelfField.value = book.shelf_number || '';
+            rowField.value = book.row || '';
+            
+            // Set checkboxes (supports single or multiple if saved as array/comma string)
+            const bookCat = book.category || book.section || '';
+            checkboxes.forEach(cb => {
+                if (bookCat.includes(cb.value)) cb.checked = true;
+            });
         }
     } else {
         title.textContent = 'New Book';
         idField.value = '';
         titleField.value = '';
         authorField.value = '';
-        sectionField.value = '';
         shelfField.value = '';
+        rowField.value = '';
     }
     formContainer.style.display = 'block';
 };
@@ -372,12 +409,20 @@ window.closeBookForm = function () {
 
 window.saveBook = async function () {
     const editId = document.getElementById('edit-book-id').value;
+    
+    // Get selected categories
+    const selectedCats = Array.from(document.querySelectorAll('input[name="category"]:checked'))
+        .map(cb => cb.value);
+
     const bookData = {
         title: document.getElementById('new-title').value.trim(),
         author: document.getElementById('new-author').value.trim(),
-        section: document.getElementById('new-section').value.trim(),
+        category: selectedCats.length > 0 ? selectedCats[0] : 'Other', // Using first one for primary category
+        categories: selectedCats, // Store all for future use
         shelf_number: document.getElementById('new-shelf').value.trim(),
-        available: true
+        row: document.getElementById('new-row').value.trim(),
+        available: true,
+        last_updated: serverTimestamp()
     };
 
     if (!bookData.title || !bookData.author) return;

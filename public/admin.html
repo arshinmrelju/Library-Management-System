@@ -33,6 +33,9 @@
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
             margin-bottom: 16px;
+            display: flex;
+            flex-direction: column !important;
+            align-items: stretch !important;
         }
 
         .req-header {
@@ -177,8 +180,23 @@
             <!-- Inventory View -->
             <section id="inventory-view" class="view">
                 <h2 class="view-title">Manage Books</h2>
-                <button class="btn btn-primary" style="margin-bottom: 16px;" onclick="openBookForm()">+ Add New
-                    Book</button>
+                <button class="btn btn-primary" style="margin-bottom: 24px;" onclick="openBookForm()">+ Add New Book</button>
+                
+                <!-- Category Filter Chips -->
+                <div style="margin-bottom: 24px;">
+                    <label style="display:block; margin-bottom:10px; font-weight:700; color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px;">Category Filter</label>
+                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:12px; -webkit-overflow-scrolling: touch; scrollbar-width: none;" id="admin-category-filter">
+                        <button class="filter-chip active" data-category="All">All Books</button>
+                        <button class="filter-chip" data-category="Novel">Novel</button>
+                        <button class="filter-chip" data-category="Stories">Stories</button>
+                        <button class="filter-chip" data-category="Reference">Reference</button>
+                        <button class="filter-chip" data-category="Poem">Poem</button>
+                        <button class="filter-chip" data-category="Children Literature">Children</button>
+                        <button class="filter-chip" data-category="Literature">Literature</button>
+                        <button class="filter-chip" data-category="Politics">Politics</button>
+                        <button class="filter-chip" data-category="Study Materials">Study</button>
+                    </div>
+                </div>
 
                 <div id="book-form-container"
                     style="display:none; background:white; padding:16px; border-radius:8px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
@@ -189,13 +207,28 @@
                     <input type="text" id="new-author" placeholder="Author" class="search-input"
                         style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
 
+                    <!-- Category Selection -->
+                    <div style="margin-bottom: 16px;">
+                        <label style="display:block; margin-bottom:8px; font-weight:700; color:var(--text-primary); font-size: 14px;">Category *</label>
+                        <div id="category-checkboxes" style="display:grid; grid-template-columns: 1fr; gap:10px; background:#f8fafc; padding:16px; border-radius:16px; border:1px solid var(--border-color);">
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Novel" style="width:18px; height:18px; accent-color:var(--primary-color);"> Novel</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Stories" style="width:18px; height:18px; accent-color:var(--primary-color);"> Stories</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Reference" style="width:18px; height:18px; accent-color:var(--primary-color);"> Reference</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Poem" style="width:18px; height:18px; accent-color:var(--primary-color);"> Poem</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Children Literature" style="width:18px; height:18px; accent-color:var(--primary-color);"> Children Literature</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Literature" style="width:18px; height:18px; accent-color:var(--primary-color);"> Literature</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Politics" style="width:18px; height:18px; accent-color:var(--primary-color);"> Politics</label>
+                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Study Materials" style="width:18px; height:18px; accent-color:var(--primary-color);"> Study Materials</label>
+                        </div>
+                    </div>
+
                     <!-- Location Inputs -->
-                    <input type="text" id="new-section" placeholder="Section (e.g. Fiction)" class="search-input"
-                        style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
-                    <input type="text" id="new-shelf" placeholder="Shelf (e.g. A-1)" class="search-input"
-                        style="border-bottom: 1px solid #ccc; margin-bottom: 8px; width:100%;">
-                    <input type="text" id="new-row" placeholder="Row (Optional, e.g. Top)" class="search-input"
-                        style="border-bottom: 1px solid #ccc; margin-bottom: 16px; width:100%;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 16px;">
+                        <input type="text" id="new-shelf" placeholder="Shelf (e.g. A-1)" class="search-input"
+                            style="border-bottom: 1px solid #ccc; width:100%;">
+                        <input type="text" id="new-row" placeholder="Row (Optional)" class="search-input"
+                            style="border-bottom: 1px solid #ccc; width:100%;">
+                    </div>
 
                     <div style="display:flex; gap:8px;">
                         <button class="btn btn-primary" style="padding:10px 16px;" onclick="saveBook()">Save</button>

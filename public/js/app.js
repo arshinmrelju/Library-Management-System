@@ -641,6 +641,7 @@ async function processRequestBook(bookId) {
                 uid: currentUser.uid,
                 userEmail: currentUser.email,
                 userName: currentUser.name,
+                userPhone: libraryData.member ? libraryData.member.phone : 'N/A',
                 bookId: book.id,
                 bookTitle: book.title,
                 status: 'pending',
