@@ -14,7 +14,9 @@ import {
     serverTimestamp,
     orderBy,
     limit,
-    query
+    query,
+    getDocs,
+    startAfter
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentView = 'requests-view';
@@ -37,7 +39,11 @@ function getLanguageName(lang) {
 let libraryData = {
     books: [],
     requests: [],
-    members: []
+    members: [],
+    lastVisible: null,
+    hasMore: true,
+    isLoading: true,
+    isNextPageLoading: false
 };
 
 export function initAdmin() {
@@ -104,25 +110,15 @@ function setupListeners() {
             chip.classList.add('active');
             
             adminCategoryFilter = chip.dataset.category;
-            renderInventory();
+            resetPagination();
+            fetchBooksBatch();
         });
     }
 }
 
 function setupDataListeners() {
-    const booksQuery = query(collection(db, "books"), orderBy("last_updated", "desc"), limit(100));
-    onSnapshot(booksQuery, (snapshot) => {
-        console.log("Admin: Books initial batch received:", snapshot.size);
-        libraryData.books = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (currentView === 'inventory-view') renderInventory();
-        else {
-            renderRequests();
-            renderBorrows();
-        }
-    }, (error) => {
-        console.error("Admin: Error fetching books:", error);
-        showAlertModal("Firebase Data Sync Error: " + error.message + (error.message.includes('permission') ? "\n\nTip: Check your Firestore Security Rules." : ""), "System Error");
-    });
+    // Initial fetch: Load first batch of books
+    fetchBooksBatch();
 
     const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
     onSnapshot(q, (snapshot) => {
@@ -557,7 +553,7 @@ function renderInventory() {
                     ${book.available !== false ? 'Available' : 'Unavailable'}
                 </span>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; margin-left: auto;">
                 <button class="edit-book-btn" id="edit-${book.id}" title="Edit"><i data-lucide="edit"></i></button>
                 <button class="delete-book-btn" id="delete-${book.id}" title="Delete"><i data-lucide="trash-2"></i></button>
             </div>
@@ -566,8 +562,96 @@ function renderInventory() {
         card.querySelector(`#edit-${book.id}`).onclick = () => openBookForm(book.id);
         card.querySelector(`#delete-${book.id}`).onclick = () => deleteBook(book.id);
     });
+
+    // Add Load More button
+    if (libraryData.hasMore) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'btn btn-load-more w-100';
+        loadMoreBtn.style.marginTop = '20px';
+        loadMoreBtn.style.marginBottom = '20px';
+        
+        if (libraryData.isNextPageLoading) {
+            loadMoreBtn.innerHTML = '<span class="spinner-small"></span> Loading...';
+            loadMoreBtn.disabled = true;
+        } else {
+            loadMoreBtn.innerHTML = '<i data-lucide="plus-circle"></i> Load More Books';
+            loadMoreBtn.onclick = window.loadMoreBooks;
+        }
+        
+        list.appendChild(loadMoreBtn);
+    } else if (libraryData.books.length > 0) {
+        const endMessage = document.createElement('p');
+        endMessage.style.textAlign = 'center';
+        endMessage.style.color = 'var(--text-muted)';
+        endMessage.style.fontSize = '12px';
+        endMessage.style.margin = '32px 0';
+        endMessage.innerHTML = 'You\'ve reached the end of the collection.';
+        list.appendChild(endMessage);
+    }
     lucide.createIcons();
 }
+
+window.resetPagination = function() {
+    libraryData.books = [];
+    libraryData.lastVisible = null;
+    libraryData.hasMore = true;
+    libraryData.isLoading = true;
+};
+
+window.fetchBooksBatch = async function() {
+    const batchSize = 10;
+    try {
+        let q;
+        if (adminCategoryFilter === 'All') {
+            q = query(
+                collection(db, "books"), 
+                orderBy("last_updated", "desc"), 
+                limit(batchSize)
+            );
+        } else {
+            q = query(
+                collection(db, "books"), 
+                where("category", "==", adminCategoryFilter), 
+                orderBy("last_updated", "desc"), 
+                limit(batchSize)
+            );
+        }
+
+        if (libraryData.lastVisible) {
+            q = query(q, startAfter(libraryData.lastVisible));
+        }
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            libraryData.hasMore = false;
+        } else {
+            const newBooks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            libraryData.books = [...libraryData.books, ...newBooks];
+            libraryData.lastVisible = snapshot.docs[snapshot.docs.length - 1];
+            
+            if (snapshot.docs.length < batchSize) {
+                libraryData.hasMore = false;
+            }
+        }
+
+        libraryData.isLoading = false;
+        libraryData.isNextPageLoading = false;
+        renderInventory();
+    } catch (error) {
+        console.error("Error fetching books:", error);
+        libraryData.isLoading = false;
+        libraryData.isNextPageLoading = false;
+        showAlertModal("Error fetching books: " + error.message, "System Error");
+    }
+};
+
+window.loadMoreBooks = function() {
+    if (libraryData.isNextPageLoading || !libraryData.hasMore) return;
+    libraryData.isNextPageLoading = true;
+    renderInventory();
+    fetchBooksBatch();
+};
 
 window.openBookForm = function (bookId = null) {
     const formContainer = document.getElementById('book-form-container');
@@ -640,15 +724,25 @@ window.saveBook = async function () {
     try {
         if (editId) {
             await updateDoc(doc(db, "books", editId), bookData);
+            // Manually update local cache for immediate feedback
+            const idx = libraryData.books.findIndex(b => b.id === editId);
+            if (idx !== -1) {
+                libraryData.books[idx] = { ...libraryData.books[idx], ...bookData };
+            }
         } else {
-            await addDoc(collection(db, "books"), bookData);
+            const docRef = await addDoc(collection(db, "books"), bookData);
+            // For new books, we might want to reset pagination to show it at the top
+            // since we order by last_updated desc
+            resetPagination();
+            fetchBooksBatch();
         }
     } catch (e) {
         console.error("Firebase Error:", e);
-        showAlertModal("Warning: Could not save to Cloud. If your'e using placeholders in js/firebase-config.js, please update them with your real Firebase keys. For now, the form will close.", "Warning");
+        showAlertModal("Error saving book. Check your connection or Firebase rules.", "Error");
     }
-    // Always close the form to prevent it from getting stuck
+    // Always close the form and re-render
     closeBookForm();
+    renderInventory();
 };
 
 window.showAlertModal = function (message, title = "Notice") {
@@ -664,7 +758,15 @@ window.closeAlertModal = function () {
 
 async function deleteBook(id) {
     if (confirm("Delete book?")) {
-        await deleteDoc(doc(db, "books", id));
+        try {
+            await deleteDoc(doc(db, "books", id));
+            // Remove from local cache
+            libraryData.books = libraryData.books.filter(b => b.id !== id);
+            renderInventory();
+        } catch (e) {
+            console.error("Delete failed:", e);
+            showAlertModal("Could not delete book.", "Error");
+        }
     }
 }
 
