@@ -59,7 +59,7 @@ export function initAdmin() {
             sessionStorage.setItem('isAdminLoggedIn', 'true');
             showApp();
         } else {
-            alert("Login failed. The password is 'admin123'");
+            showAlertModal("Login failed. The password is 'admin123'", "Authentication Error");
         }
     });
 }
@@ -121,7 +121,7 @@ function setupDataListeners() {
         }
     }, (error) => {
         console.error("Admin: Error fetching books:", error);
-        alert("Firebase Data Sync Error: " + error.message + (error.message.includes('permission') ? "\n\nTip: Check your Firestore Security Rules." : ""));
+        showAlertModal("Firebase Data Sync Error: " + error.message + (error.message.includes('permission') ? "\n\nTip: Check your Firestore Security Rules." : ""), "System Error");
     });
 
     const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
@@ -634,10 +634,21 @@ window.saveBook = async function () {
         }
     } catch (e) {
         console.error("Firebase Error:", e);
-        alert("Warning: Could not save to Cloud. If your'e using placeholders in js/firebase-config.js, please update them with your real Firebase keys. For now, the form will close.");
+        showAlertModal("Warning: Could not save to Cloud. If your'e using placeholders in js/firebase-config.js, please update them with your real Firebase keys. For now, the form will close.", "Warning");
     }
     // Always close the form to prevent it from getting stuck
     closeBookForm();
+};
+
+window.showAlertModal = function (message, title = "Notice") {
+    document.getElementById('alert-modal-title').textContent = title;
+    document.getElementById('alert-modal-desc').textContent = message;
+    document.getElementById('alert-modal').style.display = 'flex';
+    lucide.createIcons();
+};
+
+window.closeAlertModal = function () {
+    document.getElementById('alert-modal').style.display = 'none';
 };
 
 async function deleteBook(id) {
@@ -649,7 +660,7 @@ async function deleteBook(id) {
 window.printMemberList = function() {
     const list = libraryData.members.filter(m => m.status === 'approved');
     if (list.length === 0) {
-        alert("No approved members to print.");
+        showAlertModal("No approved members to print.", "Notice");
         return;
     }
 

@@ -63,12 +63,8 @@ export function initApp() {
                 email: user.email,
                 photo: user.photoURL
             };
-            // If they were in the middle of a request, process it
-            if (pendingRequestBookId) {
-                processRequestBook(pendingRequestBookId);
-                pendingRequestBookId = null;
-                closeAuthModal();
-            }
+            closeAuthModal();
+            // Pending requests will be processed after membership is loaded
         } else {
             currentUser = null;
         }
@@ -109,6 +105,20 @@ function setupFirestoreListeners() {
             } else {
                 libraryData.member = null;
             }
+            
+            if (pendingRequestBookId) {
+                const bookId = pendingRequestBookId;
+                pendingRequestBookId = null;
+                closeAuthModal();
+                if (!libraryData.member || libraryData.member.status !== 'approved') {
+                    showAlertModal("You need an approved Library Membership to borrow books. Please apply in the Library Card section.", "Membership Required");
+                    navigateTo('membership-view');
+                    updateNavActive('membership-view');
+                } else {
+                    processRequestBook(bookId);
+                }
+            }
+            
             if (currentView === 'membership-view') renderMembershipView();
         });
     } else {
@@ -166,7 +176,7 @@ function setupEventListeners() {
             // closeAuthModal is handled by onAuthStateChanged
         } catch (error) {
             console.error("Login failed", error);
-            alert("Sign in failed. Please try again.");
+            showAlertModal("Sign in failed. Please try again.", "Error");
         }
     });
 }
@@ -476,10 +486,25 @@ window.loadMoreBooks = function() {
 window.handleRequestAction = function (bookId) {
     if (!currentUser) {
         pendingRequestBookId = bookId;
-        openAuthModal("Enter details to request this book");
+        openAuthModal("Sign in to request this book");
+    } else if (!libraryData.member || libraryData.member.status !== 'approved') {
+        showAlertModal("You need an approved Library Membership to borrow books. Please apply in the Library Card section.", "Access Denied");
+        navigateTo('membership-view');
+        updateNavActive('membership-view');
     } else {
         processRequestBook(bookId);
     }
+};
+
+window.showAlertModal = function (message, title = "Notice") {
+    document.getElementById('alert-modal-title').textContent = title;
+    document.getElementById('alert-modal-desc').textContent = message;
+    document.getElementById('alert-modal').style.display = 'flex';
+    lucide.createIcons();
+};
+
+window.closeAlertModal = function () {
+    document.getElementById('alert-modal').style.display = 'none';
 };
 
 window.openAuthModal = function (title) {
@@ -541,7 +566,7 @@ window.applyMembership = async function (e) {
             status: 'pending',
             timestamp: serverTimestamp()
         });
-        alert('Application submitted successfully!');
+        showAlertModal('Application submitted successfully!', 'Success');
 
         if (!libraryData.member) {
             libraryData.member = { status: 'pending' };
@@ -549,7 +574,7 @@ window.applyMembership = async function (e) {
         }
     } catch (error) {
         console.error(error);
-        alert('Error submitting application. Check Firebase connection.');
+        showAlertModal('Error submitting application. Check Firebase connection.', 'Error');
     }
 };
 
@@ -718,11 +743,11 @@ async function processRequestBook(bookId) {
             // but for self-service simplicity we can do it here or let admin manage availability)
             // For now, per requirements, we store request with status: Pending.
 
-            alert(`You requested "${book.title}".`);
+            showAlertModal(`You requested "${book.title}".`, "Request Sent");
             navigateTo('my-books-view');
         } catch (e) {
             console.error(e);
-            alert("Failed to send request.");
+            showAlertModal("Failed to send request.", "Error");
         }
     }
 }
