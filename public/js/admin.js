@@ -24,6 +24,8 @@ let currentView = 'requests-view';
 let adminCategoryFilter = 'All';
 const views = document.querySelectorAll('.view');
 const navItems = document.querySelectorAll('.nav-item');
+let syncClickCount = 0;
+let lastSyncClickTime = 0;
 
 const LANGUAGE_MAP = {
     '1': 'Malayalam',
@@ -106,6 +108,25 @@ function setupListeners() {
         });
     });
 
+    // Hidden Sync Toggle: Tap title 3 times
+    const title = document.getElementById('header-title');
+    if (title) {
+        title.addEventListener('click', () => {
+            const now = Date.now();
+            if (now - lastSyncClickTime > 1000) syncClickCount = 0; // Reset if > 1s gap
+            syncClickCount++;
+            lastSyncClickTime = now;
+
+            if (syncClickCount === 3) {
+                const container = document.getElementById('sync-progress-container');
+                if (container) {
+                    container.style.display = 'block';
+                    showAlertModal("Sync details revealed!", "Debug Mode");
+                }
+            }
+        });
+    }
+
     // Category Filter Chips Listener
     const filterContainer = document.getElementById('admin-category-filter');
     if (filterContainer) {
@@ -153,6 +174,57 @@ function setupDataListeners() {
 
     // Initial fetch for BOOKS - Paginated
     fetchBooksBatch();
+
+    // Listen for Cloud Sync Progress (from Sheets)
+    setupSyncProgress();
+}
+
+function setupSyncProgress() {
+    const syncDoc = doc(db, "metadata", "sync_stats");
+    onSnapshot(syncDoc, (snapshot) => {
+        if (!snapshot.exists()) return;
+        
+        const data = snapshot.data();
+        const synced = parseInt(data.synced_books) || 0;
+        const total = parseInt(data.total_books) || 0;
+        const left = Math.max(0, total - synced);
+        
+        const container = document.getElementById('sync-progress-container');
+        const bar = document.getElementById('sync-progress-bar');
+        const text = document.getElementById('sync-count-text');
+        const msg = document.getElementById('sync-status-msg');
+        const iconDiv = document.getElementById('sync-icon');
+        const percentDiv = document.getElementById('sync-percent-text');
+        
+        if (total > 0 && container) {
+            // Only show if either it's already visible or we have the 3-tap secret
+            if (syncClickCount >= 3) {
+                container.style.display = 'block';
+            }
+            
+            const percent = Math.min(100, Math.floor((synced / total) * 100));
+            bar.style.width = `${percent}%`;
+            
+            if (percentDiv) percentDiv.textContent = `${percent}%`;
+            
+            if (percent < 100) {
+                text.innerHTML = `<span style="color:var(--primary-color)">${synced.toLocaleString()}</span> synced | <span style="color:var(--danger-color)">${left.toLocaleString()}</span> left`;
+                msg.textContent = `Syncing from Google Sheets... Last activity: ${data.last_run ? new Date(data.last_run).toLocaleTimeString() : 'Just now'}`;
+                iconDiv.innerHTML = '<i data-lucide="refresh-cw" class="lucide-spin"></i>';
+                iconDiv.style.color = 'var(--primary-color)';
+            } else {
+                text.textContent = `${total.toLocaleString()} Books Total`;
+                msg.innerHTML = '<span style="color:var(--success-color); font-weight:700;">✓ Database Fully Synced</span>. All records from Sheets are in Firestore.';
+                iconDiv.style.color = 'var(--success-color)';
+                iconDiv.innerHTML = '<i data-lucide="check-circle"></i>';
+                if (percentDiv) percentDiv.style.color = 'var(--success-color)';
+                
+                // Optional: Hide after 5 seconds of being at 100% OR leave it as a status badge
+                // setTimeout(() => { container.style.display = 'none'; }, 5000);
+            }
+            lucide.createIcons();
+        }
+    });
 }
 
 function navigateTo(viewId) {

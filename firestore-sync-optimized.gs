@@ -113,6 +113,37 @@ function runIncrementalSync() {
   props.setProperty('LAST_SYNC_ROW', (startRow + numRows - 1).toString());
   
   console.log(`Successfully processed ${numRows} rows. Last row: ${startRow + numRows - 1}`);
+
+  // 📊 Update Sync Stats for the Admin Panel
+  updateSyncStats(startRow + numRows - 1, totalRows);
+}
+
+/**
+ * 📊 UPDATE SYNC STATS IN FIRESTORE
+ */
+function updateSyncStats(syncedRow, totalRows) {
+  const token = ScriptApp.getOAuthToken();
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.project_id}/databases/(default)/documents/metadata/sync_stats`;
+  
+  const stats = {
+    total_books: totalRows - (SYNC_CONFIG.START_ROW - 1),
+    synced_books: syncedRow - (SYNC_CONFIG.START_ROW - 1),
+    last_run: new Date().toISOString()
+  };
+
+  const options = {
+    method: "patch",
+    contentType: "application/json",
+    headers: { Authorization: "Bearer " + token },
+    payload: JSON.stringify({
+      fields: encodeFirestoreFields(stats)
+    }),
+    muteHttpExceptions: true
+  };
+
+  // Use updateMask to ensure we create/update specifically these fields
+  const mask = "?updateMask.fieldPaths=total_books&updateMask.fieldPaths=synced_books&updateMask.fieldPaths=last_run";
+  UrlFetchApp.fetch(url + mask, options);
 }
 
 /**

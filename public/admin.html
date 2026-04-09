@@ -245,6 +245,24 @@
     <!-- Admin dashboard container (hidden by default) -->
     <div id="admin-app" style="display: none; height: 100dvh; flex-direction: column; padding-top: calc(64px + env(safe-area-inset-top));">
         <main id="app-content" style="flex-grow:1; overflow-y:auto; padding-bottom: calc(120px + env(safe-area-inset-bottom));">
+            <!-- Sheet Sync Progress Indicator (Global) -->
+            <div id="sync-progress-container" class="glass" style="margin: 0 20px 24px 20px; padding: 16px 20px; border-radius: 20px; display: none; border: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow-sm);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div id="sync-icon" style="color:var(--primary-color); display: flex;"><i data-lucide="refresh-cw" style="width:18px; height:18px;"></i></div>
+                        <h3 style="margin:0; font-size:15px; font-weight:800; letter-spacing:-0.5px; color: var(--primary-color);">Sync Status</h3>
+                    </div>
+                    <span id="sync-count-text" style="font-size:12px; font-weight:700; color:var(--text-muted); font-family: 'Inter', sans-serif;">Initializing...</span>
+                </div>
+                <div style="width:100%; height:8px; background:rgba(0,0,0,0.05); border-radius:10px; overflow:hidden;">
+                    <div id="sync-progress-bar" style="width:0%; height:100%; background:var(--primary-color); transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius:10px;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <p id="sync-status-msg" style="margin:0; font-size:11px; color:var(--text-secondary); font-weight:500;"></p>
+                    <span id="sync-percent-text" style="font-size:11px; font-weight:800; color:var(--primary-color);">0%</span>
+                </div>
+            </div>
+
             <!-- Dashboard/Requests View -->
             <section id="requests-view" class="view active-view">
                 <h2 class="view-title">Pending Requests</h2>
@@ -324,6 +342,7 @@
                             onclick="closeBookForm()">Cancel</button>
                     </div>
                 </div>
+
 
                 <div id="inventory-list" class="book-list"></div>
             </section>

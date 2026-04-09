@@ -6,6 +6,10 @@
     vertical-align: middle;
 }
 
+.lucide-spin {
+    animation: spin 2s linear infinite;
+}
+
 .btn .lucide {
     width: 22px;
     height: 22px;
