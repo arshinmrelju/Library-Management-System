@@ -1122,7 +1122,13 @@ window.openScanner = function(requestId, expectedMemberId, bookId) {
         html5QrCode = new Html5Qrcode("reader");
     }
 
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+    // Optimization: Increased FPS and refined scan box for better detection
+    const config = { 
+        fps: 25, 
+        qrbox: { width: 320, height: 200 }, 
+        aspectRatio: 1.0,
+        showTorchButtonIfSupported: true
+    };
 
     html5QrCode.start(
         { facingMode: "environment" }, 
@@ -1149,8 +1155,9 @@ async function onScanSuccess(decodedText) {
     
     const { requestId, expectedMemberId, bookId } = currentScanContext;
     
-    // Normalize comparison (trim whitespace, etc)
-    const scannedId = decodedText.trim();
+    // Normalize comparison: trim and remove non-printable/control characters
+    // This prevents "NYD 2" type garbled output by stripping noise
+    const scannedId = decodedText.replace(/[^\x20-\x7E]/g, "").trim();
     
     if (scannedId === expectedMemberId) {
         // Success match
