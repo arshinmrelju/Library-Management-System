@@ -1,60 +1,63 @@
 /**
- * OPTIMIZED SYNC GOOGLE SHEETS → FIRESTORE (v2)
- * - Uses Batch Writes (Atomic Commit) to avoid 429 Errors
- * - Implements Pagination for listing documents
- * - Deletes removed docs efficiently
- * - Only 1 Read cycle for existing data
+ * INCREMENTAL SYNC: GOOGLE SHEETS → FIRESTORE
+ * - Processes 300 records per run (Adjust BATCH_SIZE if needed)
+ * - Resumes from where it left off using PropertiesService
+ * - Zero FireStore Reads: Uses a 'Sync Hash' in Column M to detect changes
+ * - Switch to 'Delta Mode' after full initial sync
  */
 
 const FIREBASE_CONFIG = {
-  project_id: "navodaymlibrary",
-  // Note: These are kept for structure, but the script uses getOAuthToken() below.
-  // Ensure your Cloud Project has the "Cloud Datastore API" enabled.
-  client_email: "YOUR_SERVICE_ACCOUNT_EMAIL@navodaymlibrary.iam.gserviceaccount.com"
+  project_id: "navodaymlibrary"
+};
+
+const SYNC_CONFIG = {
+  BATCH_SIZE: 300,
+  HASH_COL: 13, // Column M
+  STOCK_COL: 2,  // Column B
+  START_ROW: 2   // Skip Header
 };
 
 /**
- * MAIN SYNC FUNCTION
+ * MAIN ENTRY POINT: Run this via Trigger or Menu
  */
-function syncSheetToFirestore() {
+function runIncrementalSync() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Book') || 
-                ss.getSheetByName('Form_Responses1') || 
-                ss.getSheets()[0];
+  const sheet = ss.getSheetByName('Book') || ss.getSheets()[0];
+  const totalRows = sheet.getLastRow();
   
-  if (!sheet) {
-    SpreadsheetApp.getUi().alert("No sheet found!");
+  const props = PropertiesService.getScriptProperties();
+  let lastProcessed = parseInt(props.getProperty('LAST_SYNC_ROW')) || (SYNC_CONFIG.START_ROW - 1);
+  
+  // Reset if we reached the end
+  if (lastProcessed >= totalRows) {
+    console.log("Full sync cycle completed. Restarting from row 2...");
+    lastProcessed = SYNC_CONFIG.START_ROW - 1;
+  }
+
+  const startRow = lastProcessed + 1;
+  const numRows = Math.min(SYNC_CONFIG.BATCH_SIZE, totalRows - startRow + 1);
+  
+  if (numRows <= 0) {
+    console.log("No new rows to sync.");
     return;
   }
 
-  const data = sheet.getDataRange().getValues();
-  const collectionName = "books";
+  console.log(`Starting sync from row ${startRow} to ${startRow + numRows - 1}`);
+  
+  const dataRange = sheet.getRange(startRow, 1, numRows, SYNC_CONFIG.HASH_COL);
+  const data = dataRange.getValues();
+  const writeBatch = [];
+  const updatedHashes = [];
 
-  console.log("Fetching existing Firestore data with pagination...");
-  const firebaseMap = getAllFirestoreDocsMap(collectionName);
-  console.log(`Found ${Object.keys(firebaseMap).length} existing documents.`);
-
-  const sheetDocIds = [];
-  const seenStocks = new Set();
-  const writeBatch = []; // 🔥 BATCH ARRAY
-
-  console.log("Processing sheet data...");
-
-  for (let i = 1; i < data.length; i++) {
+  for (let i = 0; i < data.length; i++) {
     const row = data[i];
-    const stock = String(row[1]);
-    if (!stock || stock === "undefined") continue;
-
-    // 🚫 SKIP DUPLICATES in Sheet
-    if (seenStocks.has(stock)) {
-      console.log("Duplicate skipped in sheet:", stock);
+    const stock = String(row[1]); // Column B
+    if (!stock || stock === "undefined") {
+      updatedHashes.push([row[SYNC_CONFIG.HASH_COL - 1]]); // Keep same hash
       continue;
     }
-    seenStocks.add(stock);
 
     const docId = "BOOK-" + stock;
-    sheetDocIds.push(docId);
-
     const bookData = {
       stock_number: stock,
       call_number: String(row[2]),
@@ -70,17 +73,18 @@ function syncSheetToFirestore() {
       last_updated: String(row[11] || "")
     };
 
-    if (!bookData.title || bookData.title === "undefined") continue;
+    // Calculate Hash of current data
+    const currentHash = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify(bookData)));
+    const storedHash = String(row[SYNC_CONFIG.HASH_COL - 1]);
 
-    const existing = firebaseMap[docId];
-
-    // ✅ SKIP if no changes
-    if (existing && existing.last_updated === bookData.last_updated) {
+    // 🚀 SKIP if data hasn't changed
+    if (currentHash === storedHash) {
+      updatedHashes.push([storedHash]);
       continue;
     }
 
-    // ➕ ADD TO BATCH (Update)
-    const docPath = `projects/${FIREBASE_CONFIG.project_id}/databases/(default)/documents/${collectionName}/${docId}`;
+    // ➕ ADD TO BATCH
+    const docPath = `projects/${FIREBASE_CONFIG.project_id}/databases/(default)/documents/books/${docId}`;
     writeBatch.push({
       update: {
         name: docPath,
@@ -88,46 +92,33 @@ function syncSheetToFirestore() {
       }
     });
 
-    // 🚀 EXECUTE BATCH if it reaches 500
+    updatedHashes.push([currentHash]);
+
+    // Commit if batch is full
     if (writeBatch.length >= 500) {
       commitBatch(writeBatch);
-      writeBatch.length = 0; // Clear array
+      writeBatch.length = 0;
     }
   }
 
-  // 🧹 HANDLE DELETIONS
-  console.log("Checking for books to remove...");
-  const firebaseDocIds = Object.keys(firebaseMap);
-
-  firebaseDocIds.forEach(docId => {
-    if (!sheetDocIds.includes(docId)) {
-      const docPath = `projects/${FIREBASE_CONFIG.project_id}/databases/(default)/documents/${collectionName}/${docId}`;
-      writeBatch.push({
-        delete: docPath
-      });
-
-      // 🚀 EXECUTE BATCH if it reaches 500
-      if (writeBatch.length >= 500) {
-        commitBatch(writeBatch);
-        writeBatch.length = 0;
-      }
-    }
-  });
-
-  // 🏁 FINAL FLUSH
+  // Final flush
   if (writeBatch.length > 0) {
     commitBatch(writeBatch);
   }
 
-  SpreadsheetApp.getUi().alert("✅ Optimized Sync Complete!");
-  console.log("Sync process finished.");
+  // Update hash column for the processed batch
+  sheet.getRange(startRow, SYNC_CONFIG.HASH_COL, numRows, 1).setValues(updatedHashes);
+
+  // Save progress
+  props.setProperty('LAST_SYNC_ROW', (startRow + numRows - 1).toString());
+  
+  console.log(`Successfully processed ${numRows} rows. Last row: ${startRow + numRows - 1}`);
 }
 
 /**
  * 📦 COMMIT BATCH TO FIRESTORE
  */
 function commitBatch(writes) {
-  console.log(`Committing batch of ${writes.length} operations...`);
   const token = ScriptApp.getOAuthToken();
   const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.project_id}/databases/(default)/documents:commit`;
 
@@ -142,52 +133,8 @@ function commitBatch(writes) {
   const response = UrlFetchApp.fetch(url, options);
   if (response.getResponseCode() !== 200) {
     console.error("Batch Error:", response.getContentText());
-    throw new Error("Batch commit failed. See logs.");
+    throw new Error("Batch commit failed.");
   }
-}
-
-/**
- * 🔥 FETCH ALL FIREBASE DOCS (WITH PAGINATION)
- */
-function getAllFirestoreDocsMap(collection) {
-  const token = ScriptApp.getOAuthToken();
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.project_id}/databases/(default)/documents/${collection}`;
-  
-  let map = {};
-  let pageToken = null;
-  let hasMore = true;
-
-  while (hasMore) {
-    let url = baseUrl + "?pageSize=300"; // Max for list is usually 300-500
-    if (pageToken) {
-      url += "&pageToken=" + pageToken;
-    }
-
-    const response = UrlFetchApp.fetch(url, {
-      method: "get",
-      headers: { Authorization: "Bearer " + token },
-      muteHttpExceptions: true
-    });
-
-    if (response.getResponseCode() !== 200) {
-      console.error("Fetch Error:", response.getContentText());
-      break;
-    }
-
-    const data = JSON.parse(response.getContentText());
-    
-    if (data.documents) {
-      data.documents.forEach(doc => {
-        const docId = doc.name.split("/").pop();
-        map[docId] = decodeFirestoreFields(doc.fields);
-      });
-    }
-
-    pageToken = data.nextPageToken;
-    hasMore = !!pageToken;
-  }
-
-  return map;
 }
 
 /**
@@ -206,28 +153,22 @@ function encodeFirestoreFields(data) {
 }
 
 /**
- * 🔄 DECODE FROM FIRESTORE
- */
-function decodeFirestoreFields(fields) {
-  const obj = {};
-  for (let key in fields) {
-    const val = fields[key];
-    if (val.booleanValue !== undefined) obj[key] = val.booleanValue;
-    else if (val.stringValue !== undefined) obj[key] = val.stringValue;
-    else if (val.integerValue !== undefined) obj[key] = val.integerValue;
-    else obj[key] = "";
-  }
-  return obj;
-}
-
-/**
- * 📋 MENU BUTTON
+ * 📋 MENU BUTTONS
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('🚀 Firebase Sync')
-      .addItem('Sync Library Now', 'syncSheetToFirestore')
+      .addItem('Run Incremental Sync (300 rows)', 'runIncrementalSync')
+      .addItem('Reset Sync Progress', 'resetSyncPointer')
       .addToUi();
+}
+
+/**
+ * 🧹 RESET POINTER
+ */
+function resetSyncPointer() {
+  PropertiesService.getScriptProperties().deleteProperty('LAST_SYNC_ROW');
+  SpreadsheetApp.getUi().alert("Sync pointer reset to Row 2.");
 }
 
 /**
@@ -237,8 +178,6 @@ function onEdit(e) {
   const sheet = e.source.getActiveSheet();
   const range = e.range;
   const row = range.getRow();
-  
-  // Only trigger on data rows (not header)
   if (row <= 1) return;
 
   const timestampCol = 12; // Column L

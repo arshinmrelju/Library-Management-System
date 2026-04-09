@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    
+    // Check if the user is a logged-in administrator
+    // Replace 'YOUR_ADMIN_EMAIL@gmail.com' with your actual email
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'YOU_ADMIN_EMAIL_HERE' || 
+        request.auth.token.email.endsWith('@navodaymlibrary.org')
+      );
+    }
+
+    // Check if the document belongs to the authenticated user
+    function isOwner(data) {
+      return request.auth != null && (
+        request.auth.uid == data.uid || 
+        request.auth.token.email == data.email ||
+        request.auth.token.email == data.userEmail
+      );
+    }
+
+    // ==========================================
+    // COLLECTION RULES
+    // ==========================================
+
+    // BOOKS: Publicly viewable, but only admin can modify
+    match /books/{bookId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // MEMBERS: Users can apply and see their own status. Admin manages all.
+    match /members/{memberId} {
+      allow create: if request.auth != null;
+      allow get: if isAdmin() || isOwner(resource.data);
+      allow list: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // REQUESTS: Users can create and see their own. Admin manages all.
+    match /requests/{requestId} {
+      allow create: if request.auth != null;
+      allow read: if isAdmin() || isOwner(resource.data);
+      allow update, delete: if isAdmin();
+    }
+  }
+}

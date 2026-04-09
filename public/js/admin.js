@@ -41,9 +41,15 @@ let libraryData = {
     requests: [],
     members: [],
     lastVisible: null,
+    membersLastVisible: null,
+    borrowsLastVisible: null,
     hasMore: true,
+    membersHasMore: true,
+    borrowsHasMore: true,
     isLoading: true,
-    isNextPageLoading: false
+    isNextPageLoading: false,
+    isMembersLoading: false,
+    isBorrowsLoading: false
 };
 
 export function initAdmin() {
@@ -117,23 +123,32 @@ function setupListeners() {
 }
 
 function setupDataListeners() {
-    // Initial fetch: Load first batch of books
-    fetchBooksBatch();
-
-    const q = query(collection(db, "requests"), orderBy("timestamp", "desc"));
-    onSnapshot(q, (snapshot) => {
-        libraryData.requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (currentView === 'requests-view') {
-            renderRequests();
-            renderBorrows();
-        }
+    // Listen for PENDING requests (Real-time, small subset)
+    const pq = query(collection(db, "requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+    onSnapshot(pq, (snapshot) => {
+        // We only replace the pending ones in our global list or handle them separately
+        // For simplicity, we'll keep a separate 'pendings' list or filter from a merged one
+        const pendings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Update only pending requests in libraryData.requests
+        const others = libraryData.requests.filter(r => r.status !== 'pending');
+        libraryData.requests = [...pendings, ...others];
+        if (currentView === 'requests-view') renderRequests();
     });
 
-    const mq = query(collection(db, "members"), orderBy("timestamp", "desc"));
-    onSnapshot(mq, (snapshot) => {
-        libraryData.members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Initial fetch for HISTORY (Borrowed/Returned) - Paginated
+    fetchBorrowsBatch();
+
+    // Listen for PENDING members (Real-time)
+    const pmq = query(collection(db, "members"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+    onSnapshot(pmq, (snapshot) => {
+        const pendings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const others = libraryData.members.filter(m => m.status !== 'pending');
+        libraryData.members = [...pendings, ...others];
         if (currentView === 'members-view') renderMembers();
     });
+
+    // Initial fetch for APPROVED members - Paginated
+    fetchMembersBatch();
 }
 
 function navigateTo(viewId) {
@@ -202,41 +217,106 @@ function renderRequests() {
 
 function renderBorrows() {
     const list = document.getElementById('borrowed-list');
+    const pagination = document.getElementById('borrows-pagination');
     list.innerHTML = '';
-    const borrows = libraryData.requests.filter(r => r.status === 'borrowed');
+    
+    const borrows = libraryData.requests.filter(r => r.status === 'borrowed' || r.status === 'returned');
 
-    if (borrows.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No active borrows.</p>';
+    if (borrows.length === 0 && !libraryData.isBorrowsLoading) {
+        list.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No history found.</p>';
+        pagination.innerHTML = '';
         return;
     }
 
     borrows.forEach(req => {
         const card = document.createElement('div');
         card.className = 'book-card req-card';
+        const isReturned = req.status === 'returned';
         card.innerHTML = `
             <div class="req-header">
-                <span><strong>${req.userName}</strong> (${req.userPhone || 'N/A'})</span>
-                <span>In Progress</span>
+                <span><strong>${req.userName}</strong></span>
+                <span style="color:${isReturned ? 'var(--text-muted)' : 'var(--success-color)'};">${isReturned ? 'Returned' : 'In Progress'}</span>
             </div>
             <div class="req-body">
                 <div class="book-info">
-                    <h3 class="book-title" style="font-size:14px;">${req.bookTitle}</h3>
+                    <h3 class="book-title" style="font-size:14px; margin-bottom:4px;">${req.bookTitle}</h3>
+                    <p style="font-size:11px; color:var(--text-muted); margin:0;">Phone: ${req.userPhone || 'N/A'}</p>
                 </div>
             </div>
+            ${!isReturned ? `
             <div class="req-actions" style="display:flex; margin-top:12px;">
                 <button class="btn" style="background:var(--bg-color); color:var(--text-secondary); padding: 10px 18px; font-size:13px; font-weight:700; flex:1; border-radius:12px; border:1px solid var(--border-color); transition: all 0.2s;" id="return-${req.id}">Mark Returned</button>
-            </div>
+            </div> ` : ''}
         `;
         list.appendChild(card);
-        card.querySelector(`#return-${req.id}`).onclick = () => updateRequestStatus(req.id, 'returned', req.bookId);
+        if (!isReturned) {
+            card.querySelector(`#return-${req.id}`).onclick = () => updateRequestStatus(req.id, 'returned', req.bookId);
+        }
     });
+
+    // Render Load More button
+    if (libraryData.borrowsHasMore) {
+        pagination.innerHTML = `
+            <button class="btn btn-load-more w-100" id="load-more-borrows" ${libraryData.isBorrowsLoading ? 'disabled' : ''}>
+                ${libraryData.isBorrowsLoading ? '<span class="spinner-small"></span> Loading...' : '<i data-lucide="plus-circle"></i> Load More History'}
+            </button>
+        `;
+        pagination.querySelector('#load-more-borrows').onclick = fetchBorrowsBatch;
+    } else {
+        pagination.innerHTML = libraryData.requests.length > 0 ? '<p style="text-align:center; color:var(--text-muted); font-size:12px; margin:20px 0;">End of history.</p>' : '';
+    }
+
     lucide.createIcons();
+}
+
+async function fetchBorrowsBatch() {
+    if (libraryData.isBorrowsLoading || !libraryData.borrowsHasMore) return;
+    
+    libraryData.isBorrowsLoading = true;
+    renderBorrows();
+
+    const batchSize = 10;
+    try {
+        let q = query(
+            collection(db, "requests"), 
+            where("status", "in", ["borrowed", "returned"]),
+            orderBy("timestamp", "desc"), 
+            limit(batchSize)
+        );
+
+        if (libraryData.borrowsLastVisible) {
+            q = query(q, startAfter(libraryData.borrowsLastVisible));
+        }
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            libraryData.borrowsHasMore = false;
+        } else {
+            const newRequests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            // Avoid duplicates
+            newRequests.forEach(nr => {
+                if (!libraryData.requests.find(r => r.id === nr.id)) {
+                    libraryData.requests.push(nr);
+                }
+            });
+            libraryData.borrowsLastVisible = snapshot.docs[snapshot.docs.length - 1];
+            if (snapshot.docs.length < batchSize) libraryData.borrowsHasMore = false;
+        }
+    } catch (e) {
+        console.error("Error fetching borrows:", e);
+    } finally {
+        libraryData.isBorrowsLoading = false;
+        renderBorrows();
+    }
 }
 
 function renderMembers() {
     const pendingList = document.getElementById('pending-members-list');
     const approvedList = document.getElementById('approved-members-list');
+    const pagination = document.getElementById('members-pagination');
     if (!pendingList || !approvedList) return;
+    
     pendingList.innerHTML = '';
     approvedList.innerHTML = '';
 
@@ -255,7 +335,7 @@ function renderMembers() {
                     <span>${m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleDateString() : 'New'}</span>
                 </div>
                 <div class="req-info" style="margin-bottom:20px;">
-                    ${m.photoURL ? `<img src="${m.photoURL}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">` : `<div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%;"><i data-lucide="user" style="width:24px; height:24px;"></i></div>`}
+                    ${m.photoURL ? `<img src="${m.photoURL}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">` : `<div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%;"><svg class="lucide" style="width:24px; height:24px;"><use href="#icon-users"/></svg></div>`}
                     <div class="book-info">
                         <p style="font-size:14px; margin:0;">Phone: ${m.phone}</p>
                         <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">Address: ${m.address}</p>
@@ -267,12 +347,15 @@ function renderMembers() {
                 </div>
             `;
             pendingList.appendChild(card);
-            card.onclick = () => showMemberDetail(m.id);
+            card.onclick = (e) => {
+                if (!e.target.closest('button')) showMemberDetail(m.id);
+            };
         });
     }
 
-    if (approved.length === 0) {
+    if (approved.length === 0 && !libraryData.isMembersLoading) {
         approvedList.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No approved members yet.</p>';
+        pagination.innerHTML = '';
     } else {
         approved.forEach(m => {
             const card = document.createElement('div');
@@ -284,7 +367,7 @@ function renderMembers() {
                     <span style="color:var(--success-color);">Active</span>
                 </div>
                 <div class="req-info">
-                    ${m.photoURL ? `<img src="${m.photoURL}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">` : `<div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%;"><i data-lucide="id-card" style="width:24px; height:24px;"></i></div>`}
+                    ${m.photoURL ? `<img src="${m.photoURL}" style="width:50px; height:50px; border-radius:50%; object-fit:cover;">` : `<div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%;"><svg class="lucide" style="width:24px; height:24px;"><use href="#icon-users"/></svg></div>`}
                     <div class="book-info">
                         <p style="font-size:14px; margin:0; font-weight:bold;">ID: ${m.memberId}</p>
                         <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">Phone: ${m.phone}</p>
@@ -295,7 +378,61 @@ function renderMembers() {
             card.onclick = () => showMemberDetail(m.id);
         });
     }
+
+    // Render Load More button for members
+    if (libraryData.membersHasMore) {
+        pagination.innerHTML = `
+            <button class="btn btn-load-more w-100" id="load-more-members" ${libraryData.isMembersLoading ? 'disabled' : ''}>
+                ${libraryData.isMembersLoading ? '<span class="spinner-small"></span> Loading...' : '<i data-lucide="plus-circle"></i> Load More Members'}
+            </button>
+        `;
+        pagination.querySelector('#load-more-members').onclick = fetchMembersBatch;
+    } else {
+        pagination.innerHTML = approved.length > 0 ? '<p style="text-align:center; color:var(--text-muted); font-size:12px; margin:20px 0;">End of member list.</p>' : '';
+    }
+
     lucide.createIcons();
+}
+
+async function fetchMembersBatch() {
+    if (libraryData.isMembersLoading || !libraryData.membersHasMore) return;
+    
+    libraryData.isMembersLoading = true;
+    renderMembers();
+
+    const batchSize = 10;
+    try {
+        let q = query(
+            collection(db, "members"), 
+            where("status", "==", "approved"),
+            orderBy("timestamp", "desc"), 
+            limit(batchSize)
+        );
+
+        if (libraryData.membersLastVisible) {
+            q = query(q, startAfter(libraryData.membersLastVisible));
+        }
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            libraryData.membersHasMore = false;
+        } else {
+            const newMembers = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            newMembers.forEach(nm => {
+                if (!libraryData.members.find(m => m.id === nm.id)) {
+                    libraryData.members.push(nm);
+                }
+            });
+            libraryData.membersLastVisible = snapshot.docs[snapshot.docs.length - 1];
+            if (snapshot.docs.length < batchSize) libraryData.membersHasMore = false;
+        }
+    } catch (e) {
+        console.error("Error fetching members:", e);
+    } finally {
+        libraryData.isMembersLoading = false;
+        renderMembers();
+    }
 }
 
 window.showMemberDetail = function(memberId) {
