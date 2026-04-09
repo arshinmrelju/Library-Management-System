@@ -155,27 +155,38 @@ function setupListeners() {
 
 function setupDataListeners() {
     // Listen for PENDING requests (Real-time, small subset)
-    const pq = query(collection(db, "requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"), limit(10));
+    const pq = query(collection(db, "requests"), where("status", "==", "pending"), limit(50));
     onSnapshot(pq, (snapshot) => {
-        // We only replace the pending ones in our global list or handle them separately
-        // For simplicity, we'll keep a separate 'pendings' list or filter from a merged one
-        const pendings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Update only pending requests in libraryData.requests
+        const pendings = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+            
         const others = libraryData.requests.filter(r => r.status !== 'pending');
         libraryData.requests = [...pendings, ...others];
         if (currentView === 'requests-view') renderRequests();
+    }, (error) => {
+        console.error("PENDING Requests Listener Error:", error);
+        const list = document.getElementById('pending-list');
+        if (list) list.innerHTML = `<p style="color:var(--danger-color); text-align:center;">Error loading requests: ${error.message}</p>`;
     });
 
     // Initial fetch for HISTORY (Borrowed/Returned) - Paginated
     fetchBorrowsBatch();
 
     // Listen for PENDING members (Real-time)
-    const pmq = query(collection(db, "members"), where("status", "==", "pending"), orderBy("timestamp", "desc"), limit(10));
+    const pmq = query(collection(db, "members"), where("status", "==", "pending"), limit(50));
     onSnapshot(pmq, (snapshot) => {
-        const pendings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const pendings = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
         const others = libraryData.members.filter(m => m.status !== 'pending');
         libraryData.members = [...pendings, ...others];
         if (currentView === 'members-view') renderMembers();
+    }, (error) => {
+        console.error("PENDING Members Listener Error:", error);
+        const pendingList = document.getElementById('pending-members-list');
+        if (pendingList) pendingList.innerHTML = `<p style="color:var(--danger-color); text-align:center;">Error loading pending members: ${error.message}</p>`;
     });
 
     // Initial fetch for APPROVED members - Paginated
@@ -403,6 +414,8 @@ async function fetchBorrowsBatch() {
         }
     } catch (e) {
         console.error("Error fetching borrows:", e);
+        const list = document.getElementById('borrowed-list');
+        if (list) list.innerHTML = `<p style="color:var(--danger-color); text-align:center;">Error fetching history: ${e.message}</p>`;
     } finally {
         libraryData.isBorrowsLoading = false;
         renderBorrows();
@@ -538,6 +551,8 @@ async function fetchMembersBatch() {
         }
     } catch (e) {
         console.error("Error fetching members:", e);
+        const approvedList = document.getElementById('approved-members-list');
+        if (approvedList) approvedList.innerHTML = `<p style="color:var(--danger-color); text-align:center;">Error fetching members: ${e.message}</p>`;
     } finally {
         libraryData.isMembersLoading = false;
         renderMembers();
