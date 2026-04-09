@@ -7,7 +7,7 @@
  */
 
 const FIREBASE_CONFIG = {
-  project_id: "navodaymlibrary"
+  project_id: "navodhayam-library"
 };
 
 const SYNC_CONFIG = {

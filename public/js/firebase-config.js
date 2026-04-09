@@ -10,13 +10,13 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase
 
 // Your app's Firebase project configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDHVoMliBWV_zikCnievv7T1igbtQRXD2s",
-    authDomain: "navodaymlibrary.firebaseapp.com",
-    projectId: "navodaymlibrary",
-    storageBucket: "navodaymlibrary.firebasestorage.app",
-    messagingSenderId: "1015676164901",
-    appId: "1:1015676164901:web:9c24f1812443d882da18cc",
-    measurementId: "G-92C8DYG7H7"
+    apiKey: "AIzaSyDiF6_pOdspr1rD0nIlWW4TgVmN2KMbzUI",
+    authDomain: "navodhayam-library.firebaseapp.com",
+    projectId: "navodhayam-library",
+    storageBucket: "navodhayam-library.firebasestorage.app",
+    messagingSenderId: "637237931320",
+    appId: "1:637237931320:web:112a66d0b264a05b74a5cd",
+    measurementId: "G-TB71NJ58PY"
 };
 
 // Initialize Firebase

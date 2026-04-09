@@ -10,8 +10,8 @@ service cloud.firestore {
     // Replace 'YOUR_ADMIN_EMAIL@gmail.com' with your actual email
     function isAdmin() {
       return request.auth != null && (
-        request.auth.token.email == 'YOU_ADMIN_EMAIL_HERE' || 
-        request.auth.token.email.endsWith('@navodaymlibrary.org')
+        request.auth.token.email == 'navodhayamlibraryamarakuni@gmail.com' || 
+        request.auth.token.email.endsWith('@navodhayam-library.firebaseapp.com')
       );
     }
 
