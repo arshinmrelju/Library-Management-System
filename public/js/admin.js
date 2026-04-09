@@ -16,7 +16,8 @@ import {
     limit,
     query,
     getDocs,
-    startAfter
+    startAfter,
+    where
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentView = 'requests-view';
@@ -124,7 +125,7 @@ function setupListeners() {
 
 function setupDataListeners() {
     // Listen for PENDING requests (Real-time, small subset)
-    const pq = query(collection(db, "requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+    const pq = query(collection(db, "requests"), where("status", "==", "pending"), orderBy("timestamp", "desc"), limit(10));
     onSnapshot(pq, (snapshot) => {
         // We only replace the pending ones in our global list or handle them separately
         // For simplicity, we'll keep a separate 'pendings' list or filter from a merged one
@@ -139,7 +140,7 @@ function setupDataListeners() {
     fetchBorrowsBatch();
 
     // Listen for PENDING members (Real-time)
-    const pmq = query(collection(db, "members"), where("status", "==", "pending"), orderBy("timestamp", "desc"));
+    const pmq = query(collection(db, "members"), where("status", "==", "pending"), orderBy("timestamp", "desc"), limit(10));
     onSnapshot(pmq, (snapshot) => {
         const pendings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const others = libraryData.members.filter(m => m.status !== 'pending');
@@ -149,6 +150,9 @@ function setupDataListeners() {
 
     // Initial fetch for APPROVED members - Paginated
     fetchMembersBatch();
+
+    // Initial fetch for BOOKS - Paginated
+    fetchBooksBatch();
 }
 
 function navigateTo(viewId) {
