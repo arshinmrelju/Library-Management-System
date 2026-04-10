@@ -201,7 +201,7 @@ function syncMembersFromSheet() {
       bloodGroup: String(row[8] || ""),
       joiningDate: String(row[9] || ""),
       deposit: String(row[10] || ""),
-      status: String(row[11] || 'approved').toLowerCase(), // Standardize to lowercase
+      status: 'approved', // 🔥 Force 'approved' for all sheet members so they show up in the app
       timestamp: new Date().toISOString(),
       last_updated: new Date().toISOString(),
       source: 'sheet'
@@ -532,15 +532,10 @@ function onEdit(e) {
   if (row <= 1) return;
 
   const sheetName = sheet.getName();
-  let timestampCol = 0;
-
+  
+  // 🔥 Only auto-timestamp for Books. 
+  // For Members, we let the admin portal handle status/updates to avoid overwriting Column L.
   if (sheetName === 'Book') {
-    timestampCol = 12; // Column L
-  } else if (sheetName === 'Members') {
-    timestampCol = 12; // Column L
-  }
-
-  if (timestampCol > 0) {
-    sheet.getRange(row, timestampCol).setValue(new Date().toISOString());
+    sheet.getRange(row, 12).setValue(new Date().toISOString());
   }
 }
