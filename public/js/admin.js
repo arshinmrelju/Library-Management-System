@@ -97,8 +97,16 @@ function showLogin() {
 
 function showApp() {
     document.getElementById('admin-login-screen').style.display = 'none';
-    document.getElementById('admin-app').style.display = 'flex';
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    document.getElementById('admin-app').style.display = isDesktop ? 'grid' : 'flex';
     document.getElementById('header-logout-btn').style.display = 'flex';
+    // Keep layout correct on resize
+    window.addEventListener('resize', () => {
+        const adminApp = document.getElementById('admin-app');
+        if (adminApp && adminApp.style.display !== 'none') {
+            adminApp.style.display = window.matchMedia('(min-width: 1024px)').matches ? 'grid' : 'flex';
+        }
+    }, { passive: true });
     setupListeners();
     setupDataListeners();
     lucide.createIcons();

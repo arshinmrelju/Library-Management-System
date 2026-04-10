@@ -1,0 +1,592 @@
+/* =====================================================
+   DESKTOP RESPONSIVE STYLES — Navodayam Library
+   Breakpoints: ≥768px (tablet), ≥1024px (desktop)
+   ===================================================== */
+
+/* ── Tablet & Up ──────────────────────────────────── */
+@media (min-width: 768px) {
+
+    /* Allow text to scale, unpin overflow-hidden */
+    body {
+        height: auto;
+        min-height: 100vh;
+        overflow: hidden;
+        /* keep managed by inner layout */
+    }
+
+    /* ── Header ── */
+    .app-header {
+        padding-left: 24px;
+        padding-right: 24px;
+        grid-template-columns: 56px 1fr 56px;
+    }
+
+    /* ── Content max-width wrapper ── */
+    main {
+        padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    }
+
+    /* wider modal */
+    .modal-content {
+        max-width: 480px !important;
+    }
+
+    /* ── Book grid on tablet ── */
+    .book-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    /* keep the load-more btn spanning full width */
+    .book-list>.w-100 {
+        grid-column: 1 / -1;
+    }
+
+    /* Genre grid — 4 columns */
+    .genre-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* keep "browse all" spanning last two */
+    .genre-grid .genre-card:last-child {
+        grid-column: span 2;
+    }
+
+    /* map shelf hover */
+    .map-shelf:hover {
+        transform: scale(1.03);
+        cursor: default;
+    }
+}
+
+
+/* ── Desktop (wide) ───────────────────────────────── */
+@media (min-width: 1024px) {
+
+    /* ── Base layout: header + sidebar + content ── */
+    body {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        grid-template-columns: 240px 1fr;
+        grid-template-areas:
+            "header  header"
+            "sidebar content";
+        height: 100vh;
+        overflow: hidden;
+        background: var(--bg-color);
+    }
+
+    /* Fixed Layout Fix for components that should span full width (like login) */
+    .login-container,
+    #admin-login-screen {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        z-index: 10;
+        background: radial-gradient(circle at top right, rgba(14, 116, 144, 0.05), transparent),
+            radial-gradient(circle at bottom left, rgba(8, 51, 68, 0.03), transparent);
+    }
+
+    /* ── Header spans full width ── */
+    .app-header {
+        grid-area: header;
+        grid-template-columns: 240px 1fr 240px;
+        /* Balanced side columns */
+        padding-left: 20px;
+        padding-right: 20px;
+        background: rgba(255, 255, 255, 0.98);
+        border-bottom: 1px solid rgba(8, 51, 68, 0.08);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .app-title {
+        font-size: 20px;
+        letter-spacing: 3px;
+        font-weight: 800;
+    }
+
+    /* ── Sidebar Navigation ── */
+    .bottom-nav {
+        grid-area: sidebar;
+        position: static;
+        bottom: unset;
+        left: unset;
+        right: unset;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: stretch;
+        border-radius: 0;
+        padding: 32px 18px;
+        gap: 8px;
+        background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+        border-right: 1px solid var(--border-color);
+        border-top: none;
+        box-shadow: 4px 0 24px rgba(8, 51, 68, 0.02);
+        height: 100%;
+        overflow-y: auto;
+        transition: width 0.3s ease;
+    }
+
+    .nav-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-radius: 14px;
+        min-width: unset;
+        gap: 14px;
+        text-align: left;
+        border: 1px solid transparent;
+    }
+
+    .nav-icon {
+        font-size: 20px;
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .nav-item.active {
+        background: rgba(8, 51, 68, 0.08);
+        color: var(--primary-color);
+    }
+
+    /* Sidebar Branding Area label */
+    .bottom-nav::before {
+        content: "LIBRARY EXPLORER";
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2.5px;
+        color: var(--primary-light);
+        padding: 0 16px 20px 16px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #f1f5f9;
+        opacity: 0.8;
+    }
+
+    /* Fixed Layout Fix for components that should span full width (like login) */
+    .login-container, #admin-login-screen {
+        grid-column: 1 / -1 !important;
+        grid-row: 1 / -1 !important; /* Take up header + content rows */
+        z-index: 1000 !important;
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at top right, rgba(14, 116, 144, 0.05), transparent),
+                    white !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Admin App Sub-Grid Logic */
+    #admin-app {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: grid !important;
+        grid-template-columns: 240px 1fr !important;
+        grid-template-areas: "sidebar content";
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #admin-app .bottom-nav {
+        grid-area: sidebar !important;
+    }
+
+    #admin-app #app-content {
+        grid-area: content !important;
+        padding-top: 0 !important;
+    }
+
+    /* ── Main Content ── */
+    main {
+        grid-area: content;
+        overflow-y: auto;
+        padding-top: 0 !important;
+        /* header is in grid row above */
+        padding-bottom: 40px;
+        padding-left: 0;
+        padding-right: 0;
+        height: 100%;
+    }
+
+    /* Inner content max width + centering */
+    .view {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px 40px 48px 40px;
+    }
+
+    /* Book grid — 3 columns on large desktop */
+    .book-list {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 24px;
+    }
+
+    /* Genre grid — 4 columns */
+    .genre-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Welcome view — centered hero */
+    #welcome-view.active-view {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 64px);
+        padding: 48px 40px !important;
+        background: radial-gradient(circle at 50% 50%, rgba(14, 114, 144, 0.03) 0%, transparent 70%);
+    }
+
+    #welcome-view>div {
+        max-width: 480px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .welcome-title {
+        font-size: 56px;
+        margin-bottom: 48px;
+        line-height: 1.05;
+    }
+
+    .welcome-title span {
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    #welcome-view .btn {
+        padding: 22px 32px;
+        font-size: 17px;
+        border-radius: 18px;
+    }
+
+    /* Book detail — side-by-side layout */
+    #book-detail-view .detail-img-container {
+        width: 260px;
+        height: 340px;
+        float: left;
+        margin-right: 32px;
+        margin-bottom: 16px;
+    }
+
+    /* Map wrapper */
+    .library-map-wrapper {
+        max-width: 680px;
+        margin: 0 auto;
+    }
+
+    /* Footer */
+    .app-footer {
+        grid-column: 1 / -1;
+        background: #f8fafc;
+        border-top: 1px solid var(--border-color);
+        padding: 64px 40px 32px 40px !important;
+        margin-top: 40px;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr;
+        gap: 48px;
+        text-align: left;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .footer-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .footer-logo {
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
+
+    .footer-tagline {
+        max-width: 240px;
+        margin-bottom: 24px;
+        text-align: left;
+    }
+
+    .footer-nav-links {
+        align-items: flex-start;
+    }
+
+    .footer-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .footer-location {
+        text-align: left;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .footer-credits {
+        text-align: left;
+        max-width: unset;
+        padding-top: 16px;
+        border-top: 1px solid rgba(8, 51, 68, 0.05);
+    }
+
+    .footer-base {
+        max-width: 1100px;
+        margin: 48px auto 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* ── Admin-specific: login screen ── */
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 64px);
+        padding: 40px !important;
+    }
+
+    .login-box {
+        max-width: 420px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 56px !important;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 32px 64px -16px rgba(8, 51, 68, 0.15),
+            0 16px 32px -8px rgba(8, 51, 68, 0.1);
+        border-radius: 32px;
+    }
+
+    /* Admin sidebar — 3 tabs */
+    #admin-app .bottom-nav {
+        justify-content: flex-start;
+    }
+
+    /* Admin content area */
+    #admin-app #app-content {
+        padding-top: 0 !important;
+        padding-bottom: 40px;
+    }
+
+    #admin-app .view {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 40px;
+    }
+
+    /* Requests: two columns (pending | borrowed) */
+    #requests-view.active-view {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: start;
+        max-width: 1100px !important;
+        padding: 32px 40px !important;
+    }
+
+    #requests-view h2.view-title:nth-of-type(1) {
+        grid-column: 1;
+        margin-top: 0;
+    }
+
+    #requests-view #pending-list {
+        grid-column: 1;
+    }
+
+    #requests-view h2.view-title:nth-of-type(2) {
+        grid-column: 2;
+        margin-top: 0;
+    }
+
+    #requests-view #borrowed-list {
+        grid-column: 2;
+    }
+
+    #requests-view #borrows-pagination {
+        grid-column: 2;
+    }
+
+    /* Sync progress spans both columns */
+    #sync-progress-container {
+        grid-column: 1 / -1;
+    }
+
+    /* Inventory book list — 2 col */
+    #inventory-view .book-list {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Members list — 2 col */
+    #members-view .book-list {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Category checkboxes in book form — 2 col */
+    #category-checkboxes {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    /* Admin app layout: sidebar + main */
+    #admin-app {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        display: grid !important;
+        grid-template-columns: 240px 1fr;
+        grid-template-areas: "sidebar content";
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    #admin-app .bottom-nav {
+        grid-area: sidebar;
+        height: 100%;
+        overflow-y: auto;
+    }
+
+    #admin-app #app-content {
+        grid-area: content;
+        overflow-y: auto;
+        height: 100%;
+        padding-bottom: 40px !important;
+    }
+
+    /* Login container full-height centering */
+    #admin-login-screen {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 64px);
+        padding: 40px 24px;
+        position: relative;
+        z-index: 100;
+    }
+
+    /* ── Premium Scrollbars ── */
+    *::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background: rgba(8, 51, 68, 0.1);
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+        background: rgba(8, 51, 68, 0.2);
+        border-radius: 20px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+    }
+}
+
+
+/* ── Extra-wide screens ───────────────────────────── */
+@media (min-width: 1280px) {
+
+    body {
+        grid-template-columns: 260px 1fr;
+    }
+
+    .bottom-nav {
+        width: 260px;
+    }
+
+    .view {
+        max-width: 1040px;
+    }
+
+    .book-list {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    /* Welcome view buttons wider */
+    #welcome-view>div {
+        max-width: 560px;
+    }
+}
+
+
+/* ── Hover effects (pointer devices only) ────────── */
+@media (hover: hover) {
+
+    .book-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-light);
+    }
+
+    .book-card:active {
+        transform: scale(0.98);
+    }
+
+    .nav-item:hover {
+        background: rgba(8, 51, 68, 0.04);
+        color: var(--primary-color);
+        transform: translateX(4px);
+        border-color: rgba(8, 51, 68, 0.05);
+    }
+
+    .nav-item:active {
+        transform: translateX(2px) scale(0.98);
+    }
+
+    .nav-item.active {
+        background: linear-gradient(90deg, rgba(8, 51, 68, 0.08) 0%, rgba(8, 51, 68, 0.02) 100%);
+        color: var(--primary-color);
+        border-left: 4px solid var(--primary-color);
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+        padding-left: 12px;
+    }
+
+    .genre-card:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-light);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(8, 51, 68, 0.3);
+    }
+
+    .map-shelf:hover {
+        transform: scale(1.04);
+        box-shadow: var(--shadow-md);
+    }
+
+    .filter-chip:hover {
+        background: rgba(8, 51, 68, 0.05);
+        border-color: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    .header-action:hover {
+        background: rgba(8, 51, 68, 0.06);
+        transform: scale(1.05);
+    }
+}

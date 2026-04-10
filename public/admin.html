@@ -3,26 +3,31 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
     <!-- SEO & Meta Tags -->
-    <meta name="description" content="Librarian Admin Portal for Nayodayam Library. Manage requests, inventory, and library members.">
-    <meta name="robots" content="noindex, nofollow"> <!-- Prevents Google Search Console from indexing the admin dashboard -->
+    <meta name="description"
+        content="Librarian Admin Portal for Nayodayam Library. Manage requests, inventory, and library members.">
+    <meta name="robots" content="noindex, nofollow">
+    <!-- Prevents Google Search Console from indexing the admin dashboard -->
 
     <title>Nayodayam Admin - Librarian</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Google Fonts: Outfit & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/main.css?v=5">
-    <link rel="stylesheet" href="css/components.css?v=5">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css?v=6">
+    <link rel="stylesheet" href="css/components.css?v=6">
+    <link rel="stylesheet" href="css/desktop.css?v=2">
+
     <!-- Lucide Icons (Versioned for faster loading & caching) -->
     <script src="https://unpkg.com/lucide@0.363.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
-    
+
     <style>
         /* Override global main padding since #admin-app handles header offset */
         #app-content {
@@ -69,7 +74,8 @@
             align-items: center;
         }
 
-        .edit-book-btn, .delete-book-btn {
+        .edit-book-btn,
+        .delete-book-btn {
             width: 44px;
             height: 44px;
             border-radius: 14px;
@@ -153,8 +159,8 @@
             width: 100%;
             max-width: 420px;
             border-radius: 28px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .modal-content h3 {
@@ -171,17 +177,71 @@
 
     <!-- SVG Symbols for instant icon loading -->
     <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
-        <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
-        <symbol id="icon-log-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol>
-        <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
-        <symbol id="icon-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="12" r="3"/></symbol>
-        <symbol id="icon-clipboard-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol>
-        <symbol id="icon-database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></symbol>
-        <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
-        <symbol id="icon-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
-        <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
-        <symbol id="icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol>
-        <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+        </symbol>
+        <symbol id="icon-log-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" x2="9" y1="12" y2="12" />
+        </symbol>
+        <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </symbol>
+        <symbol id="icon-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="12" r="3" />
+        </symbol>
+        <symbol id="icon-clipboard-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <path d="M12 11h4" />
+            <path d="M12 16h4" />
+            <path d="M8 11h.01" />
+            <path d="M8 16h.01" />
+        </symbol>
+        <symbol id="icon-database" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+            <path d="M3 12A9 3 0 0 0 21 12" />
+        </symbol>
+        <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </symbol>
+        <symbol id="icon-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="2" />
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+        </symbol>
+        <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+        </symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+            <line x1="16" x2="16" y1="2" y2="6" />
+            <line x1="8" x2="8" y1="2" y2="6" />
+            <line x1="3" x2="21" y1="10" y2="10" />
+        </symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+        </symbol>
     </svg>
 
     <!-- Barcode Scanner Modal -->
@@ -189,20 +249,29 @@
         <div class="modal-content" style="max-width: 500px; text-align: center;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0;">Scan ID Card</h3>
-                <button class="header-action" onclick="closeScanner()" style="background:var(--bg-color); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                    <svg class="lucide" style="width: 20px; height: 20px;"><use href="#icon-x"/></svg>
+                <button class="header-action" onclick="closeScanner()"
+                    style="background:var(--bg-color); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                    <svg class="lucide" style="width: 20px; height: 20px;">
+                        <use href="#icon-x" />
+                    </svg>
                 </button>
             </div>
-            
-            <div id="reader" style="width: 100%; min-height: 300px; border-radius: 16px; overflow: hidden; background: #000; margin-bottom: 20px;"></div>
-            
-            <div id="scanner-info" style="padding: 16px; background: #f8fafc; border-radius: 16px; margin-bottom: 20px; text-align: left;">
-                <p id="scanner-msg" style="margin:0; font-size:14px; color:var(--text-secondary);">Position the barcode within the frame to approve this request.</p>
+
+            <div id="reader"
+                style="width: 100%; min-height: 300px; border-radius: 16px; overflow: hidden; background: #000; margin-bottom: 20px;">
             </div>
-            
+
+            <div id="scanner-info"
+                style="padding: 16px; background: #f8fafc; border-radius: 16px; margin-bottom: 20px; text-align: left;">
+                <p id="scanner-msg" style="margin:0; font-size:14px; color:var(--text-secondary);">Position the barcode
+                    within the frame to approve this request.</p>
+            </div>
+
             <div style="display: flex; gap: 12px;">
-                <button class="btn btn-danger-soft" style="flex: 1; padding: 14px;" onclick="closeScanner()">Cancel</button>
-                <button id="force-approve-btn" class="btn btn-primary" style="flex: 1; padding: 14px; display: none;" onclick="forceApprove()">Force Approve</button>
+                <button class="btn btn-danger-soft" style="flex: 1; padding: 14px;"
+                    onclick="closeScanner()">Cancel</button>
+                <button id="force-approve-btn" class="btn btn-primary" style="flex: 1; padding: 14px; display: none;"
+                    onclick="forceApprove()">Force Approve</button>
             </div>
         </div>
     </div>
@@ -210,8 +279,11 @@
     <!-- Member Detail Modal -->
     <div id="member-detail-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative;">
-            <button class="header-action" onclick="closeMemberDetail()" style="position: absolute; top: 16px; right: 16px; background: var(--bg-color); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                <svg class="lucide" style="width: 20px; height: 20px;"><use href="#icon-x"/></svg>
+            <button class="header-action" onclick="closeMemberDetail()"
+                style="position: absolute; top: 16px; right: 16px; background: var(--bg-color); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <svg class="lucide" style="width: 20px; height: 20px;">
+                    <use href="#icon-x" />
+                </svg>
             </button>
 
             <div id="member-detail-content">
@@ -222,18 +294,30 @@
 
     <!-- Top App Bar -->
     <header class="app-header" id="app-header">
-        <button class="header-action" onclick="window.location.href='index.html'" id="header-home-btn"><svg class="lucide"><use href="#icon-home"/></svg></button>
+        <button class="header-action" onclick="window.location.href='index.html'" id="header-home-btn"><svg
+                class="lucide">
+                <use href="#icon-home" />
+            </svg></button>
         <h1 class="app-title" id="header-title">Nayodayam Admin</h1>
-        <button class="header-action" onclick="logout()" id="header-logout-btn" style="display:none;"><svg class="lucide"><use href="#icon-log-out"/></svg></button>
+        <button class="header-action" onclick="logout()" id="header-logout-btn" style="display:none;"><svg
+                class="lucide">
+                <use href="#icon-log-out" />
+            </svg></button>
     </header>
 
     <!-- Admin Login Screen -->
     <div id="admin-login-screen" class="login-container">
         <div class="login-box" style="padding: 40px; border-radius: 24px; box-shadow: var(--shadow-lg);">
-            <div style="color:var(--primary-color); margin-bottom: 24px;"><svg class="lucide" style="width:48px; height:48px;"><use href="#icon-lock"/></svg></div>
-            <h2 style="color:var(--primary-color); margin-bottom:12px; font-weight: 800; letter-spacing: -1px; font-size: 28px;">Librarian Portal</h2>
-            <p style="color:var(--text-secondary); margin-bottom: 32px; font-size: 15px;">Sign in with your admin Google account to manage the library.</p>
-            
+            <div style="color:var(--primary-color); margin-bottom: 24px;"><svg class="lucide"
+                    style="width:48px; height:48px;">
+                    <use href="#icon-lock" />
+                </svg></div>
+            <h2
+                style="color:var(--primary-color); margin-bottom:12px; font-weight: 800; letter-spacing: -1px; font-size: 28px;">
+                Librarian Portal</h2>
+            <p style="color:var(--text-secondary); margin-bottom: 32px; font-size: 15px;">Sign in with your admin Google
+                account to manage the library.</p>
+
             <button id="admin-google-login" class="btn btn-google w-100">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
                 <span>Sign in with Google</span>
@@ -245,23 +329,34 @@
     </div>
 
     <!-- Admin dashboard container (hidden by default) -->
-    <div id="admin-app" style="display: none; height: 100dvh; flex-direction: column; padding-top: calc(64px + env(safe-area-inset-top));">
-        <main id="app-content" style="flex-grow:1; overflow-y:auto; padding-bottom: calc(120px + env(safe-area-inset-bottom));">
+    <div id="admin-app"
+        style="display: none; height: 100dvh; flex-direction: column; padding-top: calc(64px + env(safe-area-inset-top));">
+        <main id="app-content"
+            style="flex-grow:1; overflow-y:auto; padding-bottom: calc(120px + env(safe-area-inset-bottom));">
             <!-- Sheet Sync Progress Indicator (Global) -->
-            <div id="sync-progress-container" class="glass" style="margin: 0 20px 24px 20px; padding: 16px 20px; border-radius: 20px; display: none; border: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow-sm);">
+            <div id="sync-progress-container" class="glass"
+                style="margin: 0 20px 24px 20px; padding: 16px 20px; border-radius: 20px; display: none; border: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow-sm);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <div id="sync-icon" style="color:var(--primary-color); display: flex;"><i data-lucide="refresh-cw" style="width:18px; height:18px;"></i></div>
-                        <h3 style="margin:0; font-size:15px; font-weight:800; letter-spacing:-0.5px; color: var(--primary-color);">Sync Status</h3>
+                        <div id="sync-icon" style="color:var(--primary-color); display: flex;"><i
+                                data-lucide="refresh-cw" style="width:18px; height:18px;"></i></div>
+                        <h3
+                            style="margin:0; font-size:15px; font-weight:800; letter-spacing:-0.5px; color: var(--primary-color);">
+                            Sync Status</h3>
                     </div>
-                    <span id="sync-count-text" style="font-size:12px; font-weight:700; color:var(--text-muted); font-family: 'Inter', sans-serif;">Initializing...</span>
+                    <span id="sync-count-text"
+                        style="font-size:12px; font-weight:700; color:var(--text-muted); font-family: 'Inter', sans-serif;">Initializing...</span>
                 </div>
                 <div style="width:100%; height:8px; background:rgba(0,0,0,0.05); border-radius:10px; overflow:hidden;">
-                    <div id="sync-progress-bar" style="width:0%; height:100%; background:var(--primary-color); transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius:10px;"></div>
+                    <div id="sync-progress-bar"
+                        style="width:0%; height:100%; background:var(--primary-color); transition:width 1s cubic-bezier(0.4, 0, 0.2, 1); border-radius:10px;">
+                    </div>
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                    <p id="sync-status-msg" style="margin:0; font-size:11px; color:var(--text-secondary); font-weight:500;"></p>
-                    <span id="sync-percent-text" style="font-size:11px; font-weight:800; color:var(--primary-color);">0%</span>
+                    <p id="sync-status-msg"
+                        style="margin:0; font-size:11px; color:var(--text-secondary); font-weight:500;"></p>
+                    <span id="sync-percent-text"
+                        style="font-size:11px; font-weight:800; color:var(--primary-color);">0%</span>
                 </div>
             </div>
 
@@ -278,12 +373,16 @@
             <!-- Inventory View -->
             <section id="inventory-view" class="view">
                 <h2 class="view-title">Manage Books</h2>
-                <button class="btn btn-primary" style="margin-bottom: 24px;" onclick="openBookForm()">+ Add New Book</button>
-                
+                <button class="btn btn-primary" style="margin-bottom: 24px;" onclick="openBookForm()">+ Add New
+                    Book</button>
+
                 <!-- Category Filter Chips -->
                 <div style="margin-bottom: 24px;">
-                    <label style="display:block; margin-bottom:10px; font-weight:700; color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px;">Category Filter</label>
-                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:12px; -webkit-overflow-scrolling: touch; scrollbar-width: none;" id="admin-category-filter">
+                    <label
+                        style="display:block; margin-bottom:10px; font-weight:700; color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:1px;">Category
+                        Filter</label>
+                    <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:12px; -webkit-overflow-scrolling: touch; scrollbar-width: none;"
+                        id="admin-category-filter">
                         <button class="filter-chip active" data-category="All">All Books</button>
                         <button class="filter-chip" data-category="Novel">Novel</button>
                         <button class="filter-chip" data-category="Stories">Stories</button>
@@ -307,8 +406,11 @@
 
                     <!-- Language Selection -->
                     <div style="margin-bottom: 16px;">
-                        <label style="display:block; margin-bottom:8px; font-weight:700; color:var(--text-primary); font-size: 14px;">Language *</label>
-                        <select id="new-language" class="search-input" style="width:100%; border-bottom: 1px solid #ccc; padding: 8px 0; background: transparent; cursor: pointer; font-family: 'Inter', sans-serif;">
+                        <label
+                            style="display:block; margin-bottom:8px; font-weight:700; color:var(--text-primary); font-size: 14px;">Language
+                            *</label>
+                        <select id="new-language" class="search-input"
+                            style="width:100%; border-bottom: 1px solid #ccc; padding: 8px 0; background: transparent; cursor: pointer; font-family: 'Inter', sans-serif;">
                             <option value="1">Malayalam</option>
                             <option value="2">English</option>
                             <option value="3">Hindi</option>
@@ -317,16 +419,48 @@
 
                     <!-- Category Selection -->
                     <div style="margin-bottom: 16px;">
-                        <label style="display:block; margin-bottom:8px; font-weight:700; color:var(--text-primary); font-size: 14px;">Category *</label>
-                        <div id="category-checkboxes" style="display:grid; grid-template-columns: 1fr; gap:10px; background:#f8fafc; padding:16px; border-radius:16px; border:1px solid var(--border-color);">
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Novel" style="width:18px; height:18px; accent-color:var(--primary-color);"> Novel</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Stories" style="width:18px; height:18px; accent-color:var(--primary-color);"> Stories</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Reference" style="width:18px; height:18px; accent-color:var(--primary-color);"> Reference</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Poem" style="width:18px; height:18px; accent-color:var(--primary-color);"> Poem</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Children Literature" style="width:18px; height:18px; accent-color:var(--primary-color);"> Children Literature</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Literature" style="width:18px; height:18px; accent-color:var(--primary-color);"> Literature</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Politics" style="width:18px; height:18px; accent-color:var(--primary-color);"> Politics</label>
-                            <label style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input type="checkbox" name="category" value="Study Materials" style="width:18px; height:18px; accent-color:var(--primary-color);"> Study Materials</label>
+                        <label
+                            style="display:block; margin-bottom:8px; font-weight:700; color:var(--text-primary); font-size: 14px;">Category
+                            *</label>
+                        <div id="category-checkboxes"
+                            style="display:grid; grid-template-columns: 1fr; gap:10px; background:#f8fafc; padding:16px; border-radius:16px; border:1px solid var(--border-color);">
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Novel"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);"> Novel</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Stories"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);"> Stories</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Reference"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);">
+                                Reference</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Poem"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);"> Poem</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Children Literature"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);"> Children
+                                Literature</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Literature"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);">
+                                Literature</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Politics"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);">
+                                Politics</label>
+                            <label
+                                style="display:flex; align-items:center; gap:12px; font-size:15px; cursor:pointer; padding:4px 0;"><input
+                                    type="checkbox" name="category" value="Study Materials"
+                                    style="width:18px; height:18px; accent-color:var(--primary-color);"> Study
+                                Materials</label>
                         </div>
                     </div>
 
@@ -348,7 +482,7 @@
 
                 <div id="inventory-list" class="book-list"></div>
             </section>
-            
+
             <!-- Members View -->
             <section id="members-view" class="view">
                 <h2 class="view-title">Membership Applications</h2>
@@ -356,8 +490,13 @@
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
                     <h2 class="view-title" style="margin: 0;">Approved Members</h2>
-                    <button class="btn glass" style="padding: 8px 12px; font-size: 12px; color: var(--primary-color); font-weight: 700; border-radius: 8px;" onclick="printMemberList()">
-                        <svg class="lucide" style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;"><use href="#icon-clipboard-list"/></svg> Print List
+                    <button class="btn glass"
+                        style="padding: 8px 12px; font-size: 12px; color: var(--primary-color); font-weight: 700; border-radius: 8px;"
+                        onclick="printMemberList()">
+                        <svg class="lucide"
+                            style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                            <use href="#icon-clipboard-list" />
+                        </svg> Print List
                     </button>
                 </div>
                 <div id="approved-members-list" class="book-list"></div>
@@ -366,19 +505,25 @@
             <footer class="app-footer">
                 <span class="footer-logo">Nayodayam Library</span>
                 <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                
+
                 <div class="footer-divider"></div>
-                
+
                 <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"><use href="#icon-map-pin"/></svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                
+                <p class="footer-location"><svg class="lucide"
+                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
+                        <use href="#icon-map-pin" />
+                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
+
                 <div class="footer-credits">
                     Developed by Dept. of English Interns<br>
                     <strong>Pazhassiraja College</strong>
                 </div>
 
                 <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank" style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
+                        onmouseover="this.style.color='var(--text-primary)'"
+                        onmouseout="this.style.color='var(--text-muted)'">
                         <i data-lucide="github" style="width: 16px; height: 16px;"></i>
                         <span>Open Source on GitHub</span>
                     </a>
@@ -388,15 +533,21 @@
 
         <nav class="bottom-nav">
             <button class="nav-item active" data-target="requests-view">
-                <span class="nav-icon"><svg class="lucide"><use href="#icon-clipboard-list"/></svg></span>
+                <span class="nav-icon"><svg class="lucide">
+                        <use href="#icon-clipboard-list" />
+                    </svg></span>
                 <span>Requests</span>
             </button>
             <button class="nav-item" data-target="inventory-view">
-                <span class="nav-icon"><svg class="lucide"><use href="#icon-database"/></svg></span>
+                <span class="nav-icon"><svg class="lucide">
+                        <use href="#icon-database" />
+                    </svg></span>
                 <span>Inventory</span>
             </button>
             <button class="nav-item" data-target="members-view">
-                <span class="nav-icon"><svg class="lucide"><use href="#icon-users"/></svg></span>
+                <span class="nav-icon"><svg class="lucide">
+                        <use href="#icon-users" />
+                    </svg></span>
                 <span>Members</span>
             </button>
         </nav>
@@ -409,7 +560,8 @@
             </div>
             <h3 id="alert-modal-title">Notice</h3>
             <p id="alert-modal-desc" style="color:var(--text-secondary); font-size:14px; margin-bottom:24px;"></p>
-            <button type="button" class="btn btn-primary w-100" style="padding: 14px;" onclick="closeAlertModal()">OK</button>
+            <button type="button" class="btn btn-primary w-100" style="padding: 14px;"
+                onclick="closeAlertModal()">OK</button>
         </div>
     </div>
 
