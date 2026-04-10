@@ -435,6 +435,7 @@ function onOpen() {
       .addItem('Run Member Sync (Bi-directional)', 'runMemberSync')
       .addSeparator()
       .addItem('🔍 Test Connection to Firestore', 'testFirestoreConnection')
+      .addItem('🚀 FORCE Re-sync All Books', 'runFullBookSyncForce')
       .addItem('🚀 FORCE Re-sync All Members', 'runFullMemberSyncForce')
       .addSeparator()
       .addItem('Reset Member Sync (Fix Deleted Collection)', 'resetMemberSyncProgress')
@@ -472,16 +473,40 @@ function testFirestoreConnection() {
 }
 
 /**
- * 🚀 FORCE FULL SYNC (Ignore Hashes)
+ * 🚀 FORCE FULL MEMBER SYNC (Ignore Hashes)
  */
 function runFullMemberSyncForce() {
   const ui = SpreadsheetApp.getUi();
-  const response = ui.alert('Force Sync', 'Are you sure you want to force re-upload ALL members? This ignores all hashes.', ui.ButtonSet.YES_NO);
+  const response = ui.alert('Force Sync Members', 'Are you sure you want to force re-upload ALL members? This ignores all hashes.', ui.ButtonSet.YES_NO);
   
   if (response == ui.Button.YES) {
     // Temporarily disable hash checking by clearing memory
     resetMemberSyncProgress();
     syncMembersFromSheet();
+  }
+}
+
+/**
+ * 🚀 FORCE FULL BOOK SYNC (Ignore Hashes)
+ */
+function runFullBookSyncForce() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert('Force Sync Books', 'Are you sure you want to force re-upload ALL books? This ignores all hashes.', ui.ButtonSet.YES_NO);
+  
+  if (response == ui.Button.YES) {
+    // 1. Reset progress
+    PropertiesService.getScriptProperties().deleteProperty('LAST_SYNC_ROW');
+    
+    // 2. Clear hashes
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Book') || ss.getSheets()[0];
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= SYNC_CONFIG.START_ROW) {
+      sheet.getRange(SYNC_CONFIG.START_ROW, SYNC_CONFIG.HASH_COL, lastRow - SYNC_CONFIG.START_ROW + 1, 1).clearContent();
+    }
+    
+    // 3. Start sync
+    runIncrementalSync();
   }
 }
 
