@@ -434,6 +434,16 @@ function renderMembers() {
     const pendings = libraryData.members.filter(m => m.status === 'pending');
     const approved = libraryData.members.filter(m => m.status === 'approved');
 
+    // 🔥 Sort numerically (1, 2, 3...) instead of lexicographically (1, 10, 2)
+    const sortById = (a, b) => {
+        const idA = parseInt(a.memberId || 0);
+        const idB = parseInt(b.memberId || 0);
+        return idA - idB;
+    };
+    
+    pendings.sort(sortById);
+    approved.sort(sortById);
+
     if (pendings.length === 0) {
         pendingList.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No pending applications.</p>';
     } else {
@@ -527,7 +537,6 @@ async function fetchMembersBatch() {
         let q = query(
             collection(db, "members"), 
             where("status", "==", "approved"),
-            orderBy("timestamp", "desc"), 
             limit(batchSize)
         );
 
