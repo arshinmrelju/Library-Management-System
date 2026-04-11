@@ -32,9 +32,9 @@
         rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/main.css?v=6">
-    <link rel="stylesheet" href="css/components.css?v=6">
-    <link rel="stylesheet" href="css/desktop.css?v=2">
+    <link rel="stylesheet" href="css/main.css?v=10">
+    <link rel="stylesheet" href="css/components.css?v=9">
+    <link rel="stylesheet" href="css/desktop.css?v=5">
 
     <!-- Lucide Icons (Versioned for faster loading & caching) -->
     <script src="https://unpkg.com/lucide@0.363.0"></script>
@@ -209,7 +209,7 @@
         <!-- Welcome View -->
         <section id="welcome-view" class="view active-view" style="padding-top: 0;">
             <div
-                style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:70vh; padding: 48px 24px;">
+                style="display:flex; flex-direction:column; align-items:center; justify-content:center; flex-grow:1; padding: 48px 24px; width: 100%;">
                 <div class="hero-icon" style="color:var(--primary-color);"><svg class="lucide"
                         style="width:80px; height:80px;">
                         <use href="#icon-library" />
@@ -241,22 +241,43 @@
 
             </div>
             <footer class="app-footer">
-                <span class="footer-logo">Nayodayam Library</span>
-                <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                <div class="footer-divider"></div>
-                <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide"
-                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <use href="#icon-map-pin" />
-                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                        College</strong></div>
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                            style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                <div class="footer-container">
+                    <div class="footer-grid">
+                        <div class="footer-col footer-brand">
+                            <span class="footer-logo">Nayodayam Library</span>
+                            <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                literature. Your digital doorway to a world of books.</p>
+                            <div class="footer-socials">
+                                <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                    class="footer-github-link" title="View on GitHub">
+                                    <i data-lucide="github"></i>
+                                    Open Source
+                                </a>
+                            </div>
+                        </div>
+                        <div class="footer-col footer-links">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col footer-contact">
+                            <h4>Find Us</h4>
+                            <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                            <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                        </div>
+                    </div>
+                    <div class="footer-divider"></div>
+                    <div class="footer-bottom">
+                        <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                        <div class="footer-credits">
+                            Developed by Dept. of English Interns<br>
+                            <strong>Pazhassiraja College</strong>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </section>
@@ -305,22 +326,42 @@
                     <div class="genre-icon" style="color: white; opacity: 0.9;"><i data-lucide="layers"></i></div>
                 </div>
                 <footer class="app-footer">
-                    <span class="footer-logo">Nayodayam Library</span>
-                    <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                    <div class="footer-divider"></div>
-                    <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                    <p class="footer-location"><svg class="lucide"
-                            style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                            <use href="#icon-map-pin" />
-                        </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                    <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                            College</strong></div>
-                    <div style="margin-top: 20px; display: flex; justify-content: center;">
-                        <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                            style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                            onmouseover="this.style.color='var(--text-primary)'"
-                            onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                                style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                    <div class="footer-container">
+                        <div class="footer-grid">
+                            <div class="footer-col footer-brand">
+                                <span class="footer-logo">Nayodayam Library</span>
+                                <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                    literature. Your digital doorway to a world of books.</p>
+                                <div class="footer-socials">
+                                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                        title="GitHub Repository">
+                                        <i data-lucide="github"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="footer-col footer-links">
+                                <h4>Quick Links</h4>
+                                <ul>
+                                    <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                    <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                    <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                    <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                                </ul>
+                            </div>
+                            <div class="footer-col footer-contact">
+                                <h4>Find Us</h4>
+                                <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                                <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                            </div>
+                        </div>
+                        <div class="footer-divider"></div>
+                        <div class="footer-bottom">
+                            <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                            <div class="footer-credits">
+                                Developed by Dept. of English Interns<br>
+                                <strong>Pazhassiraja College</strong>
+                            </div>
+                        </div>
                     </div>
                 </footer>
         </section>
@@ -346,22 +387,43 @@
                 <!-- Books will be injected here -->
             </div>
             <footer class="app-footer">
-                <span class="footer-logo">Nayodayam Library</span>
-                <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                <div class="footer-divider"></div>
-                <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide"
-                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <use href="#icon-map-pin" />
-                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                        College</strong></div>
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                            style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                <div class="footer-container">
+                    <div class="footer-grid">
+                        <div class="footer-col footer-brand">
+                            <span class="footer-logo">Nayodayam Library</span>
+                            <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                literature. Your digital doorway to a world of books.</p>
+                            <div class="footer-socials">
+                                <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                    class="footer-github-link" title="View on GitHub">
+                                    <i data-lucide="github"></i>
+                                    Open Source
+                                </a>
+                            </div>
+                        </div>
+                        <div class="footer-col footer-links">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col footer-contact">
+                            <h4>Find Us</h4>
+                            <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                            <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                        </div>
+                    </div>
+                    <div class="footer-divider"></div>
+                    <div class="footer-bottom">
+                        <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                        <div class="footer-credits">
+                            Developed by Dept. of English Interns<br>
+                            <strong>Pazhassiraja College</strong>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </section>
@@ -389,22 +451,43 @@
             <p style="text-align:center; color:var(--text-secondary); margin-top:16px; font-size:14px;">Look for the
                 color-coded shelves in the physical library to easily locate your books.</p>
             <footer class="app-footer">
-                <span class="footer-logo">Nayodayam Library</span>
-                <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                <div class="footer-divider"></div>
-                <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide"
-                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <use href="#icon-map-pin" />
-                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                        College</strong></div>
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                            style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                <div class="footer-container">
+                    <div class="footer-grid">
+                        <div class="footer-col footer-brand">
+                            <span class="footer-logo">Nayodayam Library</span>
+                            <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                literature. Your digital doorway to a world of books.</p>
+                            <div class="footer-socials">
+                                <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                    class="footer-github-link" title="View on GitHub">
+                                    <i data-lucide="github"></i>
+                                    Open Source
+                                </a>
+                            </div>
+                        </div>
+                        <div class="footer-col footer-links">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col footer-contact">
+                            <h4>Find Us</h4>
+                            <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                            <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                        </div>
+                    </div>
+                    <div class="footer-divider"></div>
+                    <div class="footer-bottom">
+                        <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                        <div class="footer-credits">
+                            Developed by Dept. of English Interns<br>
+                            <strong>Pazhassiraja College</strong>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </section>
@@ -416,22 +499,43 @@
                 <!-- details injected by JS -->
             </div>
             <footer class="app-footer">
-                <span class="footer-logo">Nayodayam Library</span>
-                <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                <div class="footer-divider"></div>
-                <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide"
-                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <use href="#icon-map-pin" />
-                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                        College</strong></div>
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                            style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                <div class="footer-container">
+                    <div class="footer-grid">
+                        <div class="footer-col footer-brand">
+                            <span class="footer-logo">Nayodayam Library</span>
+                            <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                literature. Your digital doorway to a world of books.</p>
+                            <div class="footer-socials">
+                                <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                    class="footer-github-link" title="View on GitHub">
+                                    <i data-lucide="github"></i>
+                                    Open Source
+                                </a>
+                            </div>
+                        </div>
+                        <div class="footer-col footer-links">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col footer-contact">
+                            <h4>Find Us</h4>
+                            <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                            <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                        </div>
+                    </div>
+                    <div class="footer-divider"></div>
+                    <div class="footer-bottom">
+                        <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                        <div class="footer-credits">
+                            Developed by Dept. of English Interns<br>
+                            <strong>Pazhassiraja College</strong>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </section>
@@ -446,22 +550,43 @@
                 <!-- Books injected by JS -->
             </div>
             <footer class="app-footer">
-                <span class="footer-logo">Nayodayam Library</span>
-                <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                <div class="footer-divider"></div>
-                <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide"
-                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <use href="#icon-map-pin" />
-                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                        College</strong></div>
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                            style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                <div class="footer-container">
+                    <div class="footer-grid">
+                        <div class="footer-col footer-brand">
+                            <span class="footer-logo">Nayodayam Library</span>
+                            <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                literature. Your digital doorway to a world of books.</p>
+                            <div class="footer-socials">
+                                <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                    class="footer-github-link" title="View on GitHub">
+                                    <i data-lucide="github"></i>
+                                    Open Source
+                                </a>
+                            </div>
+                        </div>
+                        <div class="footer-col footer-links">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col footer-contact">
+                            <h4>Find Us</h4>
+                            <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                            <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                        </div>
+                    </div>
+                    <div class="footer-divider"></div>
+                    <div class="footer-bottom">
+                        <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                        <div class="footer-credits">
+                            Developed by Dept. of English Interns<br>
+                            <strong>Pazhassiraja College</strong>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </section>
@@ -473,22 +598,43 @@
                 <!-- Injected by JS -->
             </div>
             <footer class="app-footer">
-                <span class="footer-logo">Nayodayam Library</span>
-                <p class="footer-tagline">Empowering Rural Communities Through Books</p>
-                <div class="footer-divider"></div>
-                <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
-                <p class="footer-location"><svg class="lucide"
-                        style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;">
-                        <use href="#icon-map-pin" />
-                    </svg>Amarakuni, Pulpally, Wayanad-673579, Kerala</p>
-                <div class="footer-credits">Developed by Dept. of English Interns<br><strong>Pazhassiraja
-                        College</strong></div>
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                    <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
-                        style="color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; transition: color 0.2s;"
-                        onmouseover="this.style.color='var(--text-primary)'"
-                        onmouseout="this.style.color='var(--text-muted)'"><i data-lucide="github"
-                            style="width: 16px; height: 16px;"></i><span>Open Source on GitHub</span></a>
+                <div class="footer-container">
+                    <div class="footer-grid">
+                        <div class="footer-col footer-brand">
+                            <span class="footer-logo">Nayodayam Library</span>
+                            <p class="footer-tagline">Empowering rural communities through access to knowledge and
+                                literature. Your digital doorway to a world of books.</p>
+                            <div class="footer-socials">
+                                <a href="https://github.com/arshinmrelju/Navodaya-Library" target="_blank"
+                                    class="footer-github-link" title="View on GitHub">
+                                    <i data-lucide="github"></i>
+                                    Open Source
+                                </a>
+                            </div>
+                        </div>
+                        <div class="footer-col footer-links">
+                            <h4>Quick Links</h4>
+                            <ul>
+                                <li><a href="#" onclick="navigateTo('welcome-view')">Home</a></li>
+                                <li><a href="#" onclick="navigateTo('genre-selection-view')">Browse Genres</a></li>
+                                <li><a href="#" onclick="navigateTo('library-view')">Book Catalog</a></li>
+                                <li><a href="#" onclick="navigateTo('membership-view')">Library Card</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-col footer-contact">
+                            <h4>Find Us</h4>
+                            <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
+                            <p><i data-lucide="mail"></i> info@navodayam.org</p>
+                        </div>
+                    </div>
+                    <div class="footer-divider"></div>
+                    <div class="footer-bottom">
+                        <p class="footer-copy">© 2026 Nayodayam. All rights reserved.</p>
+                        <div class="footer-credits">
+                            Developed by Dept. of English Interns<br>
+                            <strong>Pazhassiraja College</strong>
+                        </div>
+                    </div>
                 </div>
             </footer>
         </section>

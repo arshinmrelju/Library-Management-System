@@ -431,17 +431,19 @@
 /* Genre Selection Grid */
 .genre-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 40px;
     padding: 4px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .genre-card {
     background: white;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 24px 16px;
+    padding: 24px 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -450,6 +452,8 @@
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-sm);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .genre-card:hover {
@@ -479,10 +483,14 @@
 }
 
 .genre-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-primary);
     text-align: center;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    line-height: 1.3;
 }
 
 /* Pagination & Load More */

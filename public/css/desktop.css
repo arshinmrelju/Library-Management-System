@@ -68,10 +68,10 @@
     body {
         display: grid;
         grid-template-rows: auto 1fr;
-        grid-template-columns: 240px 1fr;
+        grid-template-columns: 240px 1fr 240px;
         grid-template-areas:
-            "header  header"
-            "sidebar content";
+            "header  header  header"
+            "sidebar content .";
         height: 100vh;
         overflow: hidden;
         background: var(--bg-color);
@@ -90,13 +90,15 @@
     /* ── Header spans full width ── */
     .app-header {
         grid-area: header;
-        position: relative; /* Remove fixed position so it sits in grid row 1 */
+        position: relative;
+        /* Remove fixed position so it sits in grid row 1 */
         display: grid;
-        grid-template-columns: 240px 1fr 64px;
-        /* Balanced side columns */
+        grid-template-columns: 240px 1fr 240px;
+        /* Balanced side columns matching sidebar/spacer */
         padding-left: 20px;
         padding-right: 20px;
-        height: 80px; /* Explicit desktop height */
+        height: 80px;
+        /* Explicit desktop height */
         background: rgba(255, 255, 255, 0.98);
         border-bottom: 1px solid rgba(8, 51, 68, 0.08);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
@@ -170,9 +172,11 @@
     }
 
     /* Fixed Layout Fix for components that should span full width (like login) */
-    .login-container, #admin-login-screen {
+    .login-container,
+    #admin-login-screen {
         grid-column: 1 / -1 !important;
-        grid-row: 1 / -1 !important; /* Take up header + content rows */
+        grid-row: 1 / -1 !important;
+        /* Take up header + content rows */
         z-index: 1000 !important;
         position: fixed !important;
         top: 0;
@@ -180,8 +184,9 @@
         right: 0;
         bottom: 0;
         background: radial-gradient(circle at top right, rgba(14, 116, 144, 0.05), transparent),
-                    white !important;
-        display: flex; /* Remove !important so JS can hide it after login */
+            white !important;
+        display: flex;
+        /* Remove !important so JS can hide it after login */
         align-items: center;
         justify-content: center;
     }
@@ -210,7 +215,7 @@
     /* ── Main Content ── */
     main {
         grid-area: content;
-        overflow: hidden; 
+        overflow: hidden;
         padding: 0;
         height: 100%;
     }
@@ -219,7 +224,8 @@
     .view {
         max-width: 1000px;
         margin: 0 auto;
-        padding: 40px 40px 80px 40px; /* Increased bottom padding for footer clearance */
+        padding: 40px 40px 80px 40px;
+        /* Increased bottom padding for footer clearance */
         height: 100%;
     }
 
@@ -236,16 +242,21 @@
 
     /* Welcome view — centered hero */
     #welcome-view.active-view {
-        min-height: calc(100vh - 64px);
-        padding: 48px 40px !important;
+        min-height: calc(100vh - 80px);
+        padding: 0 40px !important;
         background: radial-gradient(circle at 50% 50%, rgba(14, 114, 144, 0.03) 0%, transparent 70%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-y: auto;
     }
 
-    #welcome-view>div {
+    #welcome-view > div:first-child {
         max-width: 480px;
         width: 100%;
         text-align: center;
-        margin: 0 auto;
+        margin: auto;
+        padding: 48px 0;
     }
 
     .welcome-title {
@@ -282,71 +293,64 @@
         margin: 0 auto;
     }
 
-    /* Footer */
+
+    /* Footer — desktop layout */
     .app-footer {
         grid-column: 1 / -1;
-        background: #f8fafc;
-        border-top: 1px solid var(--border-color);
-        padding: 64px 40px 32px 40px !important;
         margin-top: 40px;
+    }
+
+    .footer-brand {
+        padding: 56px 40px 40px;
+        text-align: left;
+    }
+
+    .footer-brand .footer-tagline {
+        max-width: 320px;
+        margin-left: 0;
+        margin-right: 0;
+        margin-bottom: 28px;
+    }
+
+    .footer-socials {
+        justify-content: flex-start;
     }
 
     .footer-grid {
         display: grid;
-        grid-template-columns: 1.5fr 1fr 1fr;
-        gap: 48px;
-        text-align: left;
+        grid-template-columns: 1.6fr 1fr 1.2fr;
+        gap: 0;
         max-width: 1100px;
         margin: 0 auto;
     }
 
-    .footer-brand {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+    .footer-links,
+    .footer-contact {
+        padding: 40px 40px;
     }
 
-    .footer-logo {
-        font-size: 20px;
-        margin-bottom: 12px;
+    .footer-links {
+        border-right: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .footer-tagline {
-        max-width: 240px;
-        margin-bottom: 24px;
+    .footer-brand .footer-logo {
+        font-size: 16px;
+    }
+
+    .footer-bottom {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
         text-align: left;
-    }
-
-    .footer-nav-links {
-        align-items: flex-start;
-    }
-
-    .footer-info {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .footer-location {
-        text-align: left;
-        font-size: 13px;
-        line-height: 1.6;
+        padding: 20px 40px;
+        max-width: 100%;
     }
 
     .footer-credits {
-        text-align: left;
-        max-width: unset;
-        padding-top: 16px;
-        border-top: 1px solid rgba(8, 51, 68, 0.05);
+        text-align: right;
     }
 
-    .footer-base {
-        max-width: 1100px;
-        margin: 48px auto 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+
 
     /* ── Admin-specific: login screen ── */
     .login-container {
