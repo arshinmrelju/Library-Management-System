@@ -366,7 +366,20 @@
 
                 <h2 class="view-title" style="margin-top: 24px;">Active Borrows</h2>
                 <div id="borrowed-list" class="book-list"></div>
-                <div id="borrows-pagination" style="margin-top: 16px;"></div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px; grid-column: 1 / -1; width: 100%;">
+                    <h2 class="view-title" style="margin: 0; display: block;">Borrowing History</h2>
+                    <button class="btn glass"
+                        style="padding: 8px 12px; font-size: 12px; color: var(--primary-color); font-weight: 700; border-radius: 8px;"
+                        onclick="downloadHistoryPDF()">
+                        <svg class="lucide"
+                            style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                            <use href="#icon-clipboard-list" />
+                        </svg> Download PDF
+                    </button>
+                </div>
+                <div id="history-list" class="book-list" style="grid-column: 1 / -1; width: 100%;"></div>
+                <div id="borrows-pagination" style="grid-column: 1 / -1; margin-top: 16px; width: 100%;"></div>
                 <footer class="app-footer">
                     <div class="footer-container">
                         <div class="footer-grid">
