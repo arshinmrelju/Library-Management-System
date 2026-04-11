@@ -34,6 +34,10 @@
             padding-top: 0 !important;
         }
 
+        .view {
+            padding-top: calc(64px + 4px + env(safe-area-inset-top)) !important;
+        }
+
         .login-container {
             padding-top: calc(64px + env(safe-area-inset-top));
         }
@@ -169,6 +173,58 @@
             font-size: 24px;
             font-weight: 800;
             letter-spacing: -0.5px;
+        }
+
+        /* Sub-navigation for Requests View */
+        .sub-nav-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            padding: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .sub-nav-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sub-nav-chip {
+            padding: 10px 20px;
+            background: white;
+            border: 1.5px solid var(--border-color);
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .sub-nav-chip:hover {
+            border-color: var(--primary-light);
+            color: var(--primary-color);
+            background: #f8fafc;
+        }
+
+        .sub-nav-chip.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 12px rgba(8, 51, 68, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .sub-view-container {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -330,7 +386,7 @@
 
     <!-- Admin dashboard container (hidden by default) -->
     <div id="admin-app"
-        style="display: none; height: 100dvh; flex-direction: column; padding-top: calc(64px + env(safe-area-inset-top));">
+        style="display: none; height: 100dvh; flex-direction: column;">
         <main id="app-content" style="flex-grow:1; position: relative;">
             <!-- Sheet Sync Progress Indicator (Global) -->
             <div id="sync-progress-container" class="glass"
@@ -361,25 +417,40 @@
 
             <!-- Dashboard/Requests View -->
             <section id="requests-view" class="view active-view">
-                <h2 class="view-title">Pending Requests</h2>
-                <div id="pending-list" class="book-list"></div>
-
-                <h2 class="view-title" style="margin-top: 24px;">Active Borrows</h2>
-                <div id="borrowed-list" class="book-list"></div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px; grid-column: 1 / -1; width: 100%;">
-                    <h2 class="view-title" style="margin: 0; display: block;">Borrowing History</h2>
-                    <button class="btn glass"
-                        style="padding: 8px 12px; font-size: 12px; color: var(--primary-color); font-weight: 700; border-radius: 8px;"
-                        onclick="downloadHistoryPDF()">
-                        <svg class="lucide"
-                            style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
-                            <use href="#icon-clipboard-list" />
-                        </svg> Download PDF
-                    </button>
+                <div class="sub-nav-container" id="requests-sub-nav">
+                    <button class="sub-nav-chip active" data-sub="requests">Requests</button>
+                    <button class="sub-nav-chip" data-sub="borrows">Borrows</button>
+                    <button class="sub-nav-chip" data-sub="history">History</button>
                 </div>
-                <div id="history-list" class="book-list" style="grid-column: 1 / -1; width: 100%;"></div>
-                <div id="borrows-pagination" style="grid-column: 1 / -1; margin-top: 16px; width: 100%;"></div>
+
+                <!-- Subview: Requests -->
+                <div id="subview-requests" class="sub-view-container">
+                    <h2 class="view-title">Pending Requests</h2>
+                    <div id="pending-list" class="book-list"></div>
+                </div>
+
+                <!-- Subview: Borrows -->
+                <div id="subview-borrows" class="sub-view-container" style="display: none;">
+                    <h2 class="view-title">Active Borrows</h2>
+                    <div id="borrowed-list" class="book-list"></div>
+                </div>
+
+                <!-- Subview: History -->
+                <div id="subview-history" class="sub-view-container" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 class="view-title" style="margin: 0;">Borrowing History</h2>
+                        <button class="btn glass"
+                            style="padding: 8px 12px; font-size: 12px; color: var(--primary-color); font-weight: 700; border-radius: 8px;"
+                            onclick="downloadHistoryPDF()">
+                            <svg class="lucide"
+                                style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;">
+                                <use href="#icon-clipboard-list" />
+                            </svg> Download PDF
+                        </button>
+                    </div>
+                    <div id="history-list" class="book-list"></div>
+                    <div id="borrows-pagination" style="margin-top: 16px;"></div>
+                </div>
                 <footer class="app-footer">
                     <div class="footer-container">
                         <div class="footer-grid">
@@ -407,6 +478,7 @@
                                 <h4>Find Us</h4>
                                 <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
                                 <p><i data-lucide="mail"></i> navodhayamlibraryamarakuni@gmail.com</p>
+                                <p><i data-lucide="phone"></i> +91 95394 92910 : Librarian</p>
                             </div>
                         </div>
                         <div class="footer-divider"></div>
@@ -559,6 +631,7 @@
                                 <h4>Find Us</h4>
                                 <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
                                 <p><i data-lucide="mail"></i> navodhayamlibraryamarakuni@gmail.com</p>
+                                <p><i data-lucide="phone"></i> +91 95394 92910 : Librarian</p>
                             </div>
                         </div>
                         <div class="footer-divider"></div>
@@ -618,6 +691,7 @@
                                 <h4>Find Us</h4>
                                 <p><i data-lucide="map-pin"></i> Amarakuni, Pulpally,<br>Wayanad-673579, Kerala</p>
                                 <p><i data-lucide="mail"></i> navodhayamlibraryamarakuni@gmail.com</p>
+                                <p><i data-lucide="phone"></i> +91 95394 92910 : Librarian</p>
                             </div>
                         </div>
                         <div class="footer-divider"></div>

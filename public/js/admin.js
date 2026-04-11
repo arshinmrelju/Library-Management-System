@@ -23,6 +23,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentView = 'requests-view';
+let currentRequestSubView = 'requests';
 let adminCategoryFilter = 'All';
 const views = document.querySelectorAll('.view');
 const navItems = document.querySelectorAll('.nav-item');
@@ -159,6 +160,18 @@ function setupListeners() {
             adminCategoryFilter = chip.dataset.category;
             resetPagination();
             fetchBooksBatch();
+        });
+    }
+
+    // Requests View Sub-Navigation
+    const requestsSubNav = document.getElementById('requests-sub-nav');
+    if (requestsSubNav) {
+        requestsSubNav.addEventListener('click', (e) => {
+            const chip = e.target.closest('.sub-nav-chip');
+            if (!chip) return;
+            
+            const targetSub = chip.dataset.sub;
+            switchRequestSubView(targetSub);
         });
     }
 }
@@ -388,23 +401,24 @@ function renderBorrows() {
     if (historyList) {
         historyBorrows.forEach(req => {
             const card = document.createElement('div');
-            card.className = 'book-card req-card';
+            card.className = 'book-card';
+            card.style.padding = '12px 16px';
+            card.style.marginBottom = '8px';
+            card.style.gap = '12px';
+            card.style.alignItems = 'center';
+
             card.innerHTML = `
-                <div class="req-header">
-                    <span><strong>${req.userName}</strong></span>
-                    <span style="color:var(--text-muted);">Returned</span>
-                </div>
-                <div class="req-body">
-                    <div class="book-info">
-                        <h3 class="book-title" style="font-size:14px; margin-bottom:4px;">${req.bookTitle}</h3>
-                        <p style="font-size:11px; color:var(--text-muted); margin:0;">Phone: ${req.userPhone || 'N/A'}</p>
+                <div style="flex: 1; min-width: 0;">
+                    <h3 style="font-size: 14px; font-weight: 700; margin: 0 0 2px 0; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${req.bookTitle}</h3>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted);">
+                        <span style="font-weight: 600; color: var(--primary-light);">${req.userName}</span>
+                        <span>•</span>
+                        <span>${req.userPhone || 'N/A'}</span>
                     </div>
                 </div>
-                <div class="req-actions" style="display:flex; margin-top:12px;">
-                    <button class="btn btn-danger-soft" style="padding: 10px 18px; font-size:13px; font-weight:700; flex:1; border-radius:12px; display:flex; gap:8px; align-items:center; justify-content:center;" id="delete-hist-${req.id}">
-                        <i data-lucide="trash-2" style="width:16px; height:16px;"></i> Delete Record
-                    </button>
-                </div>
+                <button class="btn btn-danger-soft" style="width: 36px; height: 36px; padding: 0; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;" id="delete-hist-${req.id}" title="Delete Record">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                </button>
             `;
             historyList.appendChild(card);
             card.querySelector(`#delete-hist-${req.id}`).onclick = () => window.deleteHistoryRecord(req.id);
@@ -1441,3 +1455,20 @@ window.deleteHistoryRecord = async function(id) {
         }
     }
 };
+
+function switchRequestSubView(sub) {
+    currentRequestSubView = sub;
+    const chips = document.querySelectorAll('.sub-nav-chip');
+    const subviews = document.querySelectorAll('.sub-view-container');
+    
+    chips.forEach(c => {
+        if (c.dataset.sub === sub) c.classList.add('active');
+        else c.classList.remove('active');
+    });
+    
+    subviews.forEach(v => {
+        if (v.id === `subview-${sub}`) v.style.display = 'block';
+        else v.style.display = 'none';
+    });
+}
+window.switchRequestSubView = switchRequestSubView;
