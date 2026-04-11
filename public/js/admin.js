@@ -60,7 +60,9 @@ let libraryData = {
     isLoading: true,
     isNextPageLoading: false,
     isMembersLoading: false,
-    isBorrowsLoading: false
+    isBorrowsLoading: false,
+    inventorySearchType: 'title',
+    memberSearchType: 'name'
 };
 
 export function initAdmin() {
@@ -145,6 +147,56 @@ function initVoiceFeature() {
     }
 
     updateUI();
+}
+
+function initCustomDropdown(id, callback) {
+    const dropdown = document.getElementById(id + '-dropdown');
+    const trigger = document.getElementById(id + '-trigger');
+    const menu = document.getElementById(id + '-menu');
+    if (!dropdown || !trigger || !menu) return;
+
+    // Robustly find the text span inside the trigger
+    const textEl = trigger.querySelector('span');
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Close other dropdowns first
+        document.querySelectorAll('.custom-dropdown').forEach(d => {
+            if (d !== dropdown) d.classList.remove('active');
+        });
+        dropdown.classList.toggle('active');
+    });
+
+    const options = menu.querySelectorAll('.dropdown-option');
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            const label = option.dataset.label;
+
+            options.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+
+            if (textEl) textEl.textContent = label;
+            dropdown.classList.remove('active');
+
+            if (callback) callback(value, label);
+        });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', () => {
+        if (dropdown) dropdown.classList.remove('active');
+    });
+
+    // Return a setter so callers can programmatically set value
+    return function setValue(value) {
+        const target = menu.querySelector(`.dropdown-option[data-value="${value}"]`);
+        if (target) {
+            options.forEach(opt => opt.classList.remove('selected'));
+            target.classList.add('selected');
+            if (textEl) textEl.textContent = target.dataset.label;
+        }
+    };
 }
 
 function speakNotification(text) {
@@ -255,41 +307,57 @@ function setupListeners() {
         });
     }
 
-    // Inventory Search
-    const invSearchType = document.getElementById('inventory-search-type');
-    const invSearchInput = document.getElementById('inventory-search-input');
-    if (invSearchType && invSearchInput) {
-        invSearchType.addEventListener('change', () => {
-            const labels = {
-                'title': 'Search by title...',
-                'author': 'Search by author...',
-                'stock_number': 'Search by Book ID...'
-            };
-            invSearchInput.placeholder = labels[invSearchType.value] || 'Search books...';
+    // Inventory Search Dropdown
+    initCustomDropdown('inventory-search-type', (value) => {
+        libraryData.inventorySearchType = value;
+        const invSearchInput = document.getElementById('inventory-search-input');
+        const labels = {
+            'title': 'Search by title...',
+            'author': 'Search by author...',
+            'stock_number': 'Search by Book ID...'
+        };
+        if (invSearchInput) {
+            invSearchInput.placeholder = labels[value] || 'Search books...';
             if (invSearchInput.value) renderInventory();
-        });
+        }
+    });
+
+    const invSearchInput = document.getElementById('inventory-search-input');
+    if (invSearchInput) {
         invSearchInput.addEventListener('input', () => {
             renderInventory();
         });
     }
 
-    // Member Search
-    const memSearchType = document.getElementById('member-search-type');
-    const memSearchInput = document.getElementById('member-search-input');
-    if (memSearchType && memSearchInput) {
-        memSearchType.addEventListener('change', () => {
-            const labels = {
-                'name': 'Search by name...',
-                'memberId': 'Search by Member ID...',
-                'phone': 'Search by phone...'
-            };
-            memSearchInput.placeholder = labels[memSearchType.value] || 'Search members...';
+    // Member Search Dropdown
+    initCustomDropdown('member-search-type', (value) => {
+        libraryData.memberSearchType = value;
+        const memSearchInput = document.getElementById('member-search-input');
+        const labels = {
+            'name': 'Search by name...',
+            'memberId': 'Search by Member ID...',
+            'phone': 'Search by phone...'
+        };
+        if (memSearchInput) {
+            memSearchInput.placeholder = labels[value] || 'Search members...';
             if (memSearchInput.value) renderMembers();
-        });
+        }
+    });
+
+    const memSearchInput = document.getElementById('member-search-input');
+    if (memSearchInput) {
         memSearchInput.addEventListener('input', () => {
             renderMembers();
         });
     }
+
+    // Language Selection Dropdown
+    const setLanguage = initCustomDropdown('new-language', (value) => {
+        const hiddenInput = document.getElementById('new-language');
+        if (hiddenInput) hiddenInput.value = value;
+    });
+    // Expose setter globally so openBookForm can reset it
+    window._setLanguageDropdown = setLanguage;
 }
 
 function setupDataListeners() {
@@ -653,7 +721,7 @@ function renderMembers() {
     approvedList.innerHTML = '';
 
     const searchTerm = document.getElementById('member-search-input')?.value.trim().toLowerCase() || '';
-    const searchField = document.getElementById('member-search-type')?.value || 'name';
+    const searchField = libraryData.memberSearchType || 'name';
 
     const pendings = libraryData.members.filter(m => m.status === 'pending');
     const approved = libraryData.members.filter(m => {
@@ -1129,7 +1197,7 @@ function renderInventory() {
     list.innerHTML = '';
 
     const searchTerm = document.getElementById('inventory-search-input')?.value.trim().toLowerCase() || '';
-    const searchField = document.getElementById('inventory-search-type')?.value || 'title';
+    const searchType = libraryData.inventorySearchType || 'title';
 
     const filteredBooks = libraryData.books.filter(book => {
         // Category filter
@@ -1140,7 +1208,7 @@ function renderInventory() {
 
         // Search filter
         if (searchTerm) {
-            const fieldValue = book[searchField] ? String(book[searchField]).toLowerCase() : '';
+            const fieldValue = book[searchType] ? String(book[searchType]).toLowerCase() : '';
             return fieldValue.includes(searchTerm);
         }
 
@@ -1308,6 +1376,8 @@ window.openBookForm = function (bookId = null) {
             langField.value = book.language || '2';
             shelfField.value = book.shelf_number || '';
             rowField.value = book.row || '';
+            // Sync language dropdown UI
+            if (window._setLanguageDropdown) window._setLanguageDropdown(book.language || '2');
 
             // Set checkboxes (supports single or multiple if saved as array/comma string)
             const bookCat = book.category || book.section || '';
@@ -1323,6 +1393,8 @@ window.openBookForm = function (bookId = null) {
         langField.value = '2'; // Default English
         shelfField.value = '';
         rowField.value = '';
+        // Reset language dropdown UI
+        if (window._setLanguageDropdown) window._setLanguageDropdown('2');
     }
     formContainer.style.display = 'block';
 };

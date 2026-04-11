@@ -398,6 +398,10 @@
             <line x1="22" x2="16" y1="9" y2="15" />
             <line x1="16" x2="22" y1="9" y2="15" />
         </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6" />
+        </symbol>
     </svg>
 
     <!-- Barcode Scanner Modal -->
@@ -666,11 +670,25 @@
 
                 <!-- Inventory Search Bar -->
                 <div class="search-container" style="margin-bottom: 24px;">
-                    <select id="inventory-search-type" class="search-type-select">
-                        <option value="title">Title</option>
-                        <option value="author">Author</option>
-                        <option value="stock_number">Book ID</option>
-                    </select>
+                    <div class="custom-dropdown" id="inventory-search-type-dropdown">
+                        <div class="dropdown-trigger" id="inventory-search-type-trigger">
+                            <span id="inventory-selected-text">Title</span>
+                            <svg class="lucide">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                        </div>
+                        <div class="dropdown-menu" id="inventory-search-type-menu">
+                            <div class="dropdown-option selected" data-value="title" data-label="Title">
+                                <i data-lucide="type"></i> Title
+                            </div>
+                            <div class="dropdown-option" data-value="author" data-label="Author">
+                                <i data-lucide="user"></i> Author
+                            </div>
+                            <div class="dropdown-option" data-value="stock_number" data-label="Book ID">
+                                <i data-lucide="hash"></i> Book ID
+                            </div>
+                        </div>
+                    </div>
                     <div class="search-divider"></div>
                     <input type="text" id="inventory-search-input" class="search-input" placeholder="Search books...">
                 </div>
@@ -708,12 +726,26 @@
                         <label
                             style="display:block; margin-bottom:8px; font-weight:700; color:var(--text-primary); font-size: 14px;">Language
                             *</label>
-                        <select id="new-language" class="search-input"
-                            style="width:100%; border-bottom: 1px solid #ccc; padding: 8px 0; background: transparent; cursor: pointer; font-family: 'Inter', sans-serif;">
-                            <option value="1">Malayalam</option>
-                            <option value="2">English</option>
-                            <option value="3">Hindi</option>
-                        </select>
+                        <div class="custom-dropdown" id="new-language-dropdown" style="width: 100%;">
+                            <div class="dropdown-trigger" id="new-language-trigger" style="border-bottom: 1px solid #ccc; border-radius: 0; padding: 10px 0; justify-content: space-between;">
+                                <span id="language-selected-text">Malayalam</span>
+                                <svg class="lucide">
+                                    <use href="#icon-chevron-down" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-menu" id="new-language-menu" style="width: 100%; top: 100%;">
+                                <div class="dropdown-option selected" data-value="1" data-label="Malayalam">
+                                    <i data-lucide="languages"></i> Malayalam
+                                </div>
+                                <div class="dropdown-option" data-value="2" data-label="English">
+                                    <i data-lucide="languages"></i> English
+                                </div>
+                                <div class="dropdown-option" data-value="3" data-label="Hindi">
+                                    <i data-lucide="languages"></i> Hindi
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="new-language" value="1">
                     </div>
 
                     <!-- Category Selection -->
@@ -858,11 +890,25 @@
                     
                     <!-- Member Search Bar -->
                     <div class="search-container" style="margin-bottom: 24px;">
-                        <select id="member-search-type" class="search-type-select">
-                            <option value="name">Name</option>
-                            <option value="memberId">Member ID</option>
-                            <option value="phone">Phone</option>
-                        </select>
+                        <div class="custom-dropdown" id="member-search-type-dropdown">
+                            <div class="dropdown-trigger" id="member-search-type-trigger">
+                                <span id="member-selected-text">Name</span>
+                                <svg class="lucide">
+                                    <use href="#icon-chevron-down" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-menu" id="member-search-type-menu">
+                                <div class="dropdown-option selected" data-value="name" data-label="Name">
+                                    <i data-lucide="user"></i> Name
+                                </div>
+                                <div class="dropdown-option" data-value="memberId" data-label="Member ID">
+                                    <i data-lucide="credit-card"></i> Member ID
+                                </div>
+                                <div class="dropdown-option" data-value="phone" data-label="Phone">
+                                    <i data-lucide="phone"></i> Phone
+                                </div>
+                            </div>
+                        </div>
                         <div class="search-divider"></div>
                         <input type="text" id="member-search-input" class="search-input" placeholder="Search members...">
                     </div>

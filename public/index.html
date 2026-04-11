@@ -189,6 +189,10 @@
             <rect width="7" height="7" x="14" y="14" rx="1" />
             <rect width="7" height="7" x="3" y="14" rx="1" />
         </symbol>
+        <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m6 9 6 6 6-6" />
+        </symbol>
     </svg>
 
     <!-- Top App Bar -->
@@ -381,11 +385,25 @@
             </div>
 
             <div class="search-container">
-                <select id="search-type" class="search-type-select">
-                    <option value="title">Title</option>
-                    <option value="author">Author</option>
-                    <option value="stock_number">Book ID</option>
-                </select>
+                <div class="custom-dropdown" id="search-type-dropdown">
+                    <div class="dropdown-trigger" id="search-type-trigger">
+                        <span id="selected-type-text">Title</span>
+                        <svg class="lucide">
+                            <use href="#icon-chevron-down" />
+                        </svg>
+                    </div>
+                    <div class="dropdown-menu" id="search-type-menu">
+                        <div class="dropdown-option selected" data-value="title" data-label="Title">
+                            <i data-lucide="type"></i> Title
+                        </div>
+                        <div class="dropdown-option" data-value="author" data-label="Author">
+                            <i data-lucide="user"></i> Author
+                        </div>
+                        <div class="dropdown-option" data-value="stock_number" data-label="Book ID">
+                            <i data-lucide="hash"></i> Book ID
+                        </div>
+                    </div>
+                </div>
                 <div class="search-divider"></div>
                 <input type="text" id="search-input" class="search-input" placeholder="Search by title...">
             </div>

@@ -46,7 +46,8 @@ let libraryData = {
     lastVisible: null,
     hasMore: true,
     currentGenre: 'All',
-    isNextPageLoading: false
+    isNextPageLoading: false,
+    searchType: 'title'
 };
 
 // DOM Elements
@@ -140,23 +141,52 @@ function setupEventListeners() {
         });
     });
 
-    document.getElementById('search-type').addEventListener('change', (e) => {
-        const type = e.target.value;
-        const input = document.getElementById('search-input');
-        const labels = {
-            'title': 'Search by title...',
-            'author': 'Search by author...',
-            'stock_number': 'Search by Book ID...'
-        };
-        input.placeholder = labels[type] || 'Search...';
-        if (input.value.length > 0) {
-            input.dispatchEvent(new Event('input'));
-        }
+    // Custom Search Dropdown Logic
+    const searchDropdown = document.getElementById('search-type-dropdown');
+    const searchTrigger = document.getElementById('search-type-trigger');
+    const searchOptions = document.querySelectorAll('.dropdown-option');
+    const selectedTypeText = document.getElementById('selected-type-text');
+    const searchInput = document.getElementById('search-input');
+
+    searchTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchDropdown.classList.toggle('active');
     });
 
-    document.getElementById('search-input').addEventListener('input', async (e) => {
+    searchOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            const label = option.dataset.label;
+
+            // Update UI
+            searchOptions.forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            selectedTypeText.textContent = label;
+            searchDropdown.classList.remove('active');
+
+            // Update Logic
+            libraryData.searchType = value;
+            const labels = {
+                'title': 'Search by title...',
+                'author': 'Search by author...',
+                'stock_number': 'Search by Book ID...'
+            };
+            searchInput.placeholder = labels[value] || 'Search...';
+            
+            if (searchInput.value.length > 0) {
+                searchInput.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+
+    // Close dropdown on outside click
+    document.addEventListener('click', () => {
+        if (searchDropdown) searchDropdown.classList.remove('active');
+    });
+
+    searchInput.addEventListener('input', async (e) => {
         const term = e.target.value;
-        const searchField = document.getElementById('search-type').value;
+        const searchField = libraryData.searchType;
 
         if (term.length > 2) {
             // Reset pagination for search
@@ -281,7 +311,7 @@ function renderLibraryView(searchQuery = '', serverResults = null) {
         if (serverResults) return true; // Already filtered by server
         if (!searchQuery) return true; // Show all if no search
 
-        const searchField = document.getElementById('search-type')?.value || 'title';
+        const searchField = libraryData.searchType || 'title';
         const fieldValue = book[searchField] ? String(book[searchField]).toLowerCase() : '';
         return fieldValue.includes(searchQuery.toLowerCase());
     });
