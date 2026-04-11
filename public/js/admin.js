@@ -334,7 +334,11 @@ function renderRequests() {
         list.appendChild(card);
         card.querySelector(`#scan-${req.id}`).onclick = () => openScanner(req.id, resolvedMemberId, req.bookId);
         card.querySelector(`#approve-${req.id}`).onclick = () => updateRequestStatus(req.id, 'borrowed', req.bookId);
-        card.querySelector(`#reject-${req.id}`).onclick = () => updateRequestStatus(req.id, 'rejected', req.bookId);
+        card.querySelector(`#reject-${req.id}`).onclick = () => {
+            if (confirm("Reject this book request? The record will be removed.")) {
+                updateRequestStatus(req.id, 'rejected', req.bookId);
+            }
+        };
     });
     lucide.createIcons();
 }
@@ -914,7 +918,11 @@ async function updateRequestStatus(reqId, newStatus, bookId) {
             }
         }
 
-        await updateDoc(doc(db, "requests", reqId), { status: newStatus });
+        if (newStatus === 'rejected') {
+            await deleteDoc(doc(db, "requests", reqId));
+        } else {
+            await updateDoc(doc(db, "requests", reqId), { status: newStatus });
+        }
         
         // If borrowed, mark book unavailable. If returned/rejected, mark available.
         const available = (newStatus !== 'borrowed');
