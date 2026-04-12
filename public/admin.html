@@ -31,9 +31,10 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/main.css?v=12">
-    <link rel="stylesheet" href="css/components.css?v=12">
-    <link rel="stylesheet" href="css/desktop.css?v=7">
+    <link rel="stylesheet" href="css/main.css?v=20">
+    <link rel="stylesheet" href="css/components.css?v=20">
+    <link rel="stylesheet" href="css/admin.css?v=20">
+    <link rel="stylesheet" href="css/scanner.css?v=20">
 
     <!-- Lucide Icons (Versioned for faster loading & caching) -->
     <script src="https://unpkg.com/lucide@0.363.0"></script>
@@ -1042,11 +1043,17 @@
     <div id="printable-card-area"></div>
 
     <script type="module">
-        import { initAdmin } from './js/admin.js';
-        document.addEventListener('DOMContentLoaded', () => {
+        import { initAdmin } from './js/admin.js?v=20';
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initAdmin();
+                lucide.createIcons();
+            });
+        } else {
             initAdmin();
             lucide.createIcons();
-        });
+        }
     </script>
 </body>
 

@@ -20,8 +20,10 @@
   "homepage": "https://github.com/arshinmrelju/Navodaya-Library#readme",
   "dependencies": {
     "@capacitor/android": "^8.3.0",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
+    "@capacitor/haptics": "^8.0.2",
     "puppeteer": "^24.40.0"
   }
 }

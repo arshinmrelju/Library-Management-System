@@ -2,5 +2,9 @@
   "appId": "com.nayodayam.librarian",
   "appName": "Nayodayam Librarian",
   "webDir": "dist-librarian",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://navodhayam-library.firebaseapp.com/",
+    "cleartext": true
+  }
 }

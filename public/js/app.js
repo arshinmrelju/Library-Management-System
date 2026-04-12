@@ -20,6 +20,10 @@ import {
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+// Global Exports for inline onclick handlers
+window.navigateTo = navigateTo;
+window.updateNavActive = updateNavActive;
+
 let currentUser = null;
 let currentView = 'welcome-view';
 let lastView = 'welcome-view';
@@ -50,12 +54,17 @@ let libraryData = {
     searchType: 'title'
 };
 
-// DOM Elements
-const views = document.querySelectorAll('.view');
-const headerTitle = document.getElementById('header-title');
-const navItems = document.querySelectorAll('.nav-item');
+// DOM Elements (Initialized in initApp)
+let views = null;
+let headerTitle = null;
+let navItems = null;
 
 export function initApp() {
+    // Populate DOM references
+    views = document.querySelectorAll('.view');
+    headerTitle = document.getElementById('header-title');
+    navItems = document.querySelectorAll('.nav-item');
+
     // Monitor Auth State
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -66,7 +75,6 @@ export function initApp() {
                 photo: user.photoURL
             };
             closeAuthModal();
-            // Pending requests will be processed after membership is loaded
         } else {
             currentUser = null;
         }
@@ -80,6 +88,13 @@ export function initApp() {
 
     setupEventListeners();
     navigateTo('welcome-view');
+}
+
+
+function updateNavActive(targetId) {
+    navItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.target === targetId);
+    });
 }
 
 function showAuthLoading() {
@@ -144,6 +159,7 @@ function setupFirestoreListeners() {
 function setupEventListeners() {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
+            
             const target = item.dataset.target;
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
@@ -182,7 +198,7 @@ function setupEventListeners() {
                 'stock_number': 'Search by Book ID...'
             };
             searchInput.placeholder = labels[value] || 'Search...';
-            
+
             if (searchInput.value.length > 0) {
                 searchInput.dispatchEvent(new Event('input'));
             }
@@ -224,6 +240,7 @@ function setupEventListeners() {
     });
 
     document.getElementById('back-to-library').addEventListener('click', () => {
+        
         if (lastView === 'my-books-view') {
             navigateTo('my-books-view');
             updateNavActive('my-books-view');
@@ -237,16 +254,8 @@ function setupEventListeners() {
         showAuthLoading();
         try {
             // Environment detection to choose best Auth flow
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-            if (isMobile || isStandalone) {
-                // Using Popup 'inside' the app as requested. Redirect flow fails with localhost in APKs.
-                await signInWithPopup(auth, googleProvider);
-            } else {
-                // Best for Desktop Web
-                await signInWithPopup(auth, googleProvider);
-            }
+            // Simple Popup Sign-in for Website
+            await signInWithPopup(auth, googleProvider);
         } catch (error) {
             console.error("Login failed", error);
             if (error.code !== 'auth/popup-closed-by-user') {
@@ -259,6 +268,11 @@ function setupEventListeners() {
 }
 
 function navigateTo(viewId, action = null) {
+    if (!views || views.length === 0) {
+        console.warn("navigateTo called before views were initialized. Re-scanning DOM.");
+        views = document.querySelectorAll('.view');
+    }
+
     if (viewId !== 'book-detail-view' && viewId !== currentView) {
         lastView = currentView;
     }
@@ -315,13 +329,6 @@ function navigateTo(viewId, action = null) {
         headerTitle.textContent = 'Library Card';
         renderMembershipView();
     }
-}
-
-function updateNavActive(viewId) {
-    navItems.forEach(nav => {
-        if (nav.dataset.target === viewId) nav.classList.add('active');
-        else nav.classList.remove('active');
-    });
 }
 
 function renderLibraryView(searchQuery = '', serverResults = null) {
@@ -396,11 +403,11 @@ function renderLibraryView(searchQuery = '', serverResults = null) {
         card.innerHTML = `
             <div class="book-img-placeholder" style="background: var(--bg-color); position: relative;">
                 ${book.coverImageBase64
-                    ? `<img src="${book.coverImageBase64}" class="book-cover-img-card doc-scan-filter" alt="cover">`
-                    : `<i data-lucide="book" style="width:40px; height:40px; color:var(--primary-light); opacity:0.5;"></i>
+                ? `<img src="${book.coverImageBase64}" class="book-cover-img-card doc-scan-filter" alt="cover">`
+                : `<i data-lucide="book" style="width:40px; height:40px; color:var(--primary-light); opacity:0.5;"></i>
                        <div style="position: absolute; top: 8px; right: 8px; font-size: 8px; font-weight: 800; color: white; background: var(--primary-color); padding: 2px 6px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;">${section}</div>
                        <span style="position: absolute; bottom: 8px; right: 8px; font-size: 10px; font-weight: 800; color: var(--text-muted); opacity: 0.5;">#${book.stock_number || '000'}</span>`
-                }
+            }
             </div>
             <div class="book-info">
                 <div style="flex-grow: 1;">
@@ -680,9 +687,7 @@ window.logoutUser = async function () {
     }
 };
 
-// Export to window for inline onclick handlers
-window.navigateTo = navigateTo;
-window.updateNavActive = updateNavActive;
+
 
 window.selectGenre = async function (genre, icon) {
     const listTitle = document.getElementById('library-view-title');
@@ -1113,9 +1118,9 @@ window.openDocScanner = async function (bookId) {
 };
 
 // ── Auto-detect state ────────────────────────────────────────────
-let _detectRafId     = null;   // requestAnimationFrame id
-let _detectTimer     = null;   // countdown timeout
-let _detectStable    = false;  // is a document currently detected?
+let _detectRafId = null;   // requestAnimationFrame id
+let _detectTimer = null;   // countdown timeout
+let _detectStable = false;  // is a document currently detected?
 let _detectCountdown = 0;      // ms remaining before auto-capture
 const AUTO_CAPTURE_DELAY = 1500; // ms to hold steady before capture
 
@@ -1127,7 +1132,7 @@ function _startAutoDetect() {
 
     // Offscreen analysis canvas — tiny for speed (160×120)
     const offscreen = document.createElement('canvas');
-    offscreen.width  = 160;
+    offscreen.width = 160;
     offscreen.height = 120;
     const octx = offscreen.getContext('2d');
 
@@ -1197,14 +1202,14 @@ function _analyzeEdges(ctx, w, h) {
         for (let x = x0 + 1; x < x1 - 1; x++) {
             const lum = (px, py) => {
                 const i = (py * w + px) * 4;
-                return 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+                return 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
             };
-            const gx = -lum(x-1,y-1) + lum(x+1,y-1)
-                       -2*lum(x-1,y) + 2*lum(x+1,y)
-                       -lum(x-1,y+1) + lum(x+1,y+1);
-            const gy = -lum(x-1,y-1) - 2*lum(x,y-1) - lum(x+1,y-1)
-                       +lum(x-1,y+1) + 2*lum(x,y+1) + lum(x+1,y+1);
-            const mag = Math.sqrt(gx*gx + gy*gy);
+            const gx = -lum(x - 1, y - 1) + lum(x + 1, y - 1)
+                - 2 * lum(x - 1, y) + 2 * lum(x + 1, y)
+                - lum(x - 1, y + 1) + lum(x + 1, y + 1);
+            const gy = -lum(x - 1, y - 1) - 2 * lum(x, y - 1) - lum(x + 1, y - 1)
+                + lum(x - 1, y + 1) + 2 * lum(x, y + 1) + lum(x + 1, y + 1);
+            const mag = Math.sqrt(gx * gx + gy * gy);
             totalEdge += mag;
             if (mag > 40) edgePixels++; // strong edge threshold
         }
@@ -1212,7 +1217,7 @@ function _analyzeEdges(ctx, w, h) {
 
     const roiPixels = (x1 - x0 - 2) * (y1 - y0 - 2);
     const edgeDensity = edgePixels / roiPixels;
-    const avgEdge    = totalEdge / roiPixels;
+    const avgEdge = totalEdge / roiPixels;
 
     // A book cover has lots of text/art = high edge density
     // Thresholds tuned for typical book covers under indoor lighting
@@ -1229,7 +1234,7 @@ function _setFrameState(state) {
     const label = frame.querySelector('.scanner-frame-label');
     if (label) {
         if (state === 'searching') label.textContent = 'Align book cover inside the frame';
-        if (state === 'detected')  label.textContent = 'Hold still…';
+        if (state === 'detected') label.textContent = 'Hold still…';
         if (state === 'capturing') label.textContent = 'Scanning ✓';
     }
 }
@@ -1260,17 +1265,17 @@ function _cancelCountdown() {
 function _showScannerPhase(phase) {
     const captureCtrl = document.getElementById('scanner-capture-controls');
     const previewCtrl = document.getElementById('scanner-preview-controls');
-    const viewfinder  = document.getElementById('scanner-viewfinder');
+    const viewfinder = document.getElementById('scanner-viewfinder');
     const previewWrap = document.getElementById('scanner-preview-wrap');
 
     if (phase === 'camera') {
-        if (viewfinder)  viewfinder.style.display = '';
+        if (viewfinder) viewfinder.style.display = '';
         if (previewWrap) previewWrap.classList.remove('active');
         if (captureCtrl) captureCtrl.style.display = 'flex';
         if (previewCtrl) previewCtrl.style.display = 'none';
     } else {
         _stopAutoDetect();
-        if (viewfinder)  viewfinder.style.display = 'none';
+        if (viewfinder) viewfinder.style.display = 'none';
         if (previewWrap) previewWrap.classList.add('active');
         if (captureCtrl) captureCtrl.style.display = 'none';
         if (previewCtrl) previewCtrl.style.display = 'flex';
@@ -1292,9 +1297,9 @@ function _closeScanner() {
 }
 
 function _captureFrame() {
-    const video  = document.getElementById('scanner-video');
+    const video = document.getElementById('scanner-video');
     const canvas = document.getElementById('scanner-preview-canvas');
-    const frame  = document.getElementById('scanner-doc-frame');
+    const frame = document.getElementById('scanner-doc-frame');
     if (!video || !canvas || !frame) return;
 
     // Calculate crop coordinates based on object-fit: cover CSS
@@ -1331,22 +1336,22 @@ function _captureFrame() {
     if (dstW > MAX_W) { dstH = dstH * (MAX_W / dstW); dstW = MAX_W; }
     if (dstH > MAX_H) { dstW = dstW * (MAX_H / dstH); dstH = MAX_H; }
 
-    canvas.width  = dstW;
+    canvas.width = dstW;
     canvas.height = dstH;
-    
+
     const ctx = canvas.getContext('2d');
-    
+
     // Scale rendering from CSS pixels to exported image pixels
     const outputScale = dstW / frameRect.width;
 
     ctx.save();
-    
+
     // 1. Scale to final output dimensions
     ctx.scale(outputScale, outputScale);
-    
+
     // 2. Shift the drawing origin so the green frame perfectly aligns to (0,0) in the canvas
     ctx.translate(
-        -(frameRect.left - videoRect.left + offsetX), 
+        -(frameRect.left - videoRect.left + offsetX),
         -(frameRect.top - videoRect.top + offsetY)
     );
 
@@ -1378,7 +1383,7 @@ function _processFile(file) {
             if (dstH > MAX_H) { dstW = Math.round(dstW * MAX_H / dstH); dstH = MAX_H; }
 
             const canvas = document.getElementById('scanner-preview-canvas');
-            canvas.width  = dstW;
+            canvas.width = dstW;
             canvas.height = dstH;
             canvas.getContext('2d').drawImage(img, 0, 0, dstW, dstH);
 
@@ -1407,7 +1412,7 @@ async function _saveCover() {
     try {
         await updateDoc(doc(db, 'books', _scannerTargetBookId), {
             coverImageBase64: _scannerCapturedDataUrl,
-            coverUpdatedAt:   serverTimestamp()
+            coverUpdatedAt: serverTimestamp()
         });
         _closeScanner();
         _showScannerToast('✅ Cover scan saved successfully!');

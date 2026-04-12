@@ -119,6 +119,7 @@ export function initAdmin() {
     const googleBtn = document.getElementById('admin-google-login');
     if (googleBtn) {
         googleBtn.addEventListener('click', async () => {
+            
             showAuthLoading();
             try {
                 // Environment detection
@@ -142,7 +143,13 @@ export function initAdmin() {
             }
         });
     }
+
+    setupDataListeners();
+    initVoiceFeature();
+    lucide.createIcons();
 }
+
+
 
 function showLogin() {
     document.getElementById('admin-login-screen').style.display = 'flex';
@@ -316,6 +323,7 @@ window.logout = function () {
 function setupListeners() {
     navItems.forEach(item => {
         item.addEventListener('click', () => {
+            
             navItems.forEach(nav => nav.classList.remove('active'));
             item.classList.add('active');
             navigateTo(item.dataset.target);

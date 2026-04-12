@@ -44,10 +44,10 @@
         rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/main.css?v=12">
-    <link rel="stylesheet" href="css/components.css?v=12">
-    <link rel="stylesheet" href="css/desktop.css?v=7">
-    <link rel="stylesheet" href="css/scanner.css?v=1">
+    <link rel="stylesheet" href="css/main.css?v=20">
+    <link rel="stylesheet" href="css/components.css?v=20">
+    <link rel="stylesheet" href="css/desktop.css?v=20">
+    <link rel="stylesheet" href="css/scanner.css?v=20">
 
     <!-- Lucide Icons (Versioned for faster loading & caching) -->
     <script src="https://unpkg.com/lucide@0.363.0"></script>
@@ -854,11 +854,18 @@
 
     <!-- Scripts -->
     <script type="module">
-        import { initApp } from './js/app.js?v=2';
-        document.addEventListener('DOMContentLoaded', () => {
+        import { initApp } from './js/app.js?v=20';
+        
+        // Ensure app initializes when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initApp();
+                lucide.createIcons();
+            });
+        } else {
             initApp();
             lucide.createIcons();
-        });
+        }
     </script>
 </body>
 

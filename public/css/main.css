@@ -44,6 +44,29 @@
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* Native feel selection control */
+.app-header, 
+.bottom-nav, 
+.nav-item, 
+.header-action, 
+.view-title,
+button,
+label {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Allow selection in content areas */
+.book-card, 
+.detail-content, 
+.membership-status,
+input, 
+textarea {
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 /* Fix iOS automatically turning phone numbers into blue links */
@@ -258,7 +281,11 @@ main {
 }
 
 .nav-item:active .nav-icon {
-    transform: scale(1.2) translateY(-2px);
+    transform: scale(1.1) translateY(-2px);
+}
+
+.nav-item:active {
+    background: rgba(8, 51, 68, 0.15);
 }
 
 .view-title {
