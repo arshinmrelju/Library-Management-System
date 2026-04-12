@@ -442,17 +442,17 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Add cover button in book detail */
+/* Add cover button in book detail - updated to match primary theme */
 .btn-add-cover {
-    background: linear-gradient(135deg, #128C7E, #25D366);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
     border: none;
-    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+    box-shadow: 0 4px 12px rgba(8, 51, 68, 0.15);
 }
 
 .btn-add-cover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 6px 16px rgba(8, 51, 68, 0.25);
 }
 
 /* Toast notification */

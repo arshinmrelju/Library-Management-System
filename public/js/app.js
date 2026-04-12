@@ -453,7 +453,7 @@ function showBookDetail(book, myRequest) {
             scanCoverBtnHtml = `
                 <button class="btn btn-add-cover w-100" id="scan-cover-btn-detail" style="margin-top:16px; padding:14px; display:flex; align-items:center; justify-content:center; gap:10px;">
                     <i data-lucide="${hasCover ? 'refresh-cw' : 'camera'}"></i>
-                    ${hasCover ? 'Replace Book Cover Scan' : 'Scan Book Cover 📷'}
+                    ${hasCover ? 'Replace Book Cover Scan' : 'Scan Book Cover'}
                 </button>
                 <p style="margin-top:8px; font-size:11px; color:var(--text-muted); text-align:center;">
                     ${hasCover ? 'A cover scan already exists. Scan again to update it.' : 'Help the library — scan the cover page of this book!'}
