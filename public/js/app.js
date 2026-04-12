@@ -229,7 +229,7 @@ function setupEventListeners() {
             // closeAuthModal is handled by onAuthStateChanged
         } catch (error) {
             console.error("Login failed", error);
-            showAlertModal("Sign in failed. Please try again.", "Error");
+            showAlertModal("Sign in failed. Please try again.", "Error", 'error');
         }
     });
 }
@@ -606,11 +606,31 @@ window.handleRequestAction = function (bookId) {
     }
 };
 
-window.showAlertModal = function (message, title = "Notice") {
-    document.getElementById('alert-modal-title').textContent = title;
-    document.getElementById('alert-modal-desc').textContent = message;
+window.showAlertModal = function (message, title = "Notice", type = 'warning') {
+    const titleEl = document.getElementById('alert-modal-title');
+    const descEl = document.getElementById('alert-modal-desc');
+    const iconContainer = document.getElementById('alert-modal-icon-container');
+    const iconEl = document.getElementById('alert-modal-icon');
+
+    if (titleEl) titleEl.textContent = title;
+    if (descEl) descEl.textContent = message;
+
+    // Type styling
+    if (iconContainer && iconEl) {
+        if (type === 'success') {
+            iconContainer.style.color = 'var(--success-color)';
+            iconEl.setAttribute('data-lucide', 'check-circle');
+        } else if (type === 'error') {
+            iconContainer.style.color = 'var(--danger-color)';
+            iconEl.setAttribute('data-lucide', 'x-circle');
+        } else {
+            iconContainer.style.color = '#fb8c00'; // Warning orange
+            iconEl.setAttribute('data-lucide', 'alert-circle');
+        }
+    }
+
     document.getElementById('alert-modal').style.display = 'flex';
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 };
 
 window.closeAlertModal = function () {
@@ -688,7 +708,7 @@ window.applyMembership = async function (e) {
             last_updated: serverTimestamp(),
             source: 'web'
         });
-        showAlertModal('Application submitted successfully!', 'Success');
+        showAlertModal('Application submitted successfully!', 'Success', 'success');
 
         if (!libraryData.member) {
             libraryData.member = { status: 'pending' };
@@ -696,7 +716,7 @@ window.applyMembership = async function (e) {
         }
     } catch (error) {
         console.error(error);
-        showAlertModal('Error submitting application. Check Firebase connection.', 'Error');
+        showAlertModal('Error submitting application. Check Firebase connection.', 'Error', 'error');
     }
 };
 
@@ -907,11 +927,11 @@ async function processRequestBook(bookId) {
             // but for self-service simplicity we can do it here or let admin manage availability)
             // For now, per requirements, we store request with status: Pending.
 
-            showAlertModal(`You requested "${book.title}".`, "Request Sent");
+            showAlertModal(`You requested "${book.title}".`, "Request Sent", 'success');
             navigateTo('my-books-view');
         } catch (e) {
             console.error(e);
-            showAlertModal("Failed to send request.", "Error");
+            showAlertModal("Failed to send request.", "Error", 'error');
         }
     }
 }

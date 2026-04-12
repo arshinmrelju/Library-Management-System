@@ -1135,10 +1135,10 @@ window.approveMember = async function (id) {
 
         await deleteDoc(oldDocRef);
 
-        showAlertModal(`Member approved successfully! Assigned ID: ${nextId}`, "Success");
+        showAlertModal(`Member approved successfully! Assigned ID: ${nextId}`, "Success", 'success');
     } catch (e) {
         console.error("Error approving:", e);
-        showAlertModal("Failed to approve member. Check console for details.", "Error");
+        showAlertModal("Failed to approve member. Check console for details.", "Error", 'error');
     }
 };
 
@@ -1150,10 +1150,10 @@ window.rejectMember = async function (id) {
             if (currentView === 'members-view') renderMembers();
 
             await deleteDoc(doc(db, "members", id));
-            showAlertModal("Application rejected and removed.", "Success");
+            showAlertModal("Application rejected and removed.", "Success", 'success');
         } catch (e) {
             console.error(e);
-            showAlertModal("Failed to reject member.", "Error");
+            showAlertModal("Failed to reject member.", "Error", 'error');
         }
     }
 };
@@ -1452,18 +1452,38 @@ window.saveBook = async function () {
         }
     } catch (e) {
         console.error("Firebase Error:", e);
-        showAlertModal("Error saving book. Check your connection or Firebase rules.", "Error");
+        showAlertModal("Error saving book. Check your connection or Firebase rules.", "Error", 'error');
     }
     // Always close the form and re-render
     closeBookForm();
     renderInventory();
 };
 
-window.showAlertModal = function (message, title = "Notice") {
-    document.getElementById('alert-modal-title').textContent = title;
-    document.getElementById('alert-modal-desc').textContent = message;
+window.showAlertModal = function (message, title = "Notice", type = 'warning') {
+    const titleEl = document.getElementById('alert-modal-title');
+    const descEl = document.getElementById('alert-modal-desc');
+    const iconContainer = document.getElementById('alert-modal-icon-container');
+    const iconEl = document.getElementById('alert-modal-icon');
+
+    if (titleEl) titleEl.textContent = title;
+    if (descEl) descEl.textContent = message;
+
+    // Type styling
+    if (iconContainer && iconEl) {
+        if (type === 'success') {
+            iconContainer.style.color = 'var(--success-color)';
+            iconEl.setAttribute('data-lucide', 'check-circle');
+        } else if (type === 'error') {
+            iconContainer.style.color = 'var(--danger-color)';
+            iconEl.setAttribute('data-lucide', 'x-circle');
+        } else {
+            iconContainer.style.color = '#fb8c00'; // Warning orange
+            iconEl.setAttribute('data-lucide', 'alert-circle');
+        }
+    }
+
     document.getElementById('alert-modal').style.display = 'flex';
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
 };
 
 window.closeAlertModal = function () {
@@ -1479,7 +1499,7 @@ async function deleteBook(id) {
             renderInventory();
         } catch (e) {
             console.error("Delete failed:", e);
-            showAlertModal("Could not delete book.", "Error");
+            showAlertModal("Could not delete book.", "Error", 'error');
         }
     }
 }
@@ -1503,11 +1523,11 @@ window.deleteBookCover = async function () {
             const deleteCoverBtn = document.getElementById('delete-cover-btn');
             if (deleteCoverBtn) deleteCoverBtn.style.display = 'none';
 
-            showAlertModal("Cover image has been deleted.", "Success");
+            showAlertModal("Cover image has been deleted.", "Success", 'success');
             renderInventory();
         } catch (e) {
             console.error("Error deleting cover:", e);
-            showAlertModal("Failed to delete cover.", "Error");
+            showAlertModal("Failed to delete cover.", "Error", 'error');
         }
     }
 };
@@ -1645,7 +1665,7 @@ async function onScanSuccess(decodedText) {
     if (scannedId === expectedMemberId) {
         // Success match
         await html5QrCode.stop();
-        showAlertModal(`ID Verified successfully (${scannedId}). Loan approved!`, "Success");
+        showAlertModal(`ID Verified successfully (${scannedId}). Loan approved!`, "Success", 'success');
         updateRequestStatus(requestId, 'borrowed', bookId);
         closeScanner();
     } else {
@@ -1750,10 +1770,10 @@ window.deleteHistoryRecord = async function (id) {
             // Remove from local array to instantly update UI
             libraryData.requests = libraryData.requests.filter(r => r.id !== id);
             renderBorrows();
-            showAlertModal("History record deleted.", "Success");
+            showAlertModal("History record deleted.", "Success", 'success');
         } catch (e) {
             console.error("Error deleting history record: ", e);
-            showAlertModal("Failed to delete record.", "Error");
+            showAlertModal("Failed to delete record.", "Error", 'error');
         }
     }
 };
@@ -1884,12 +1904,12 @@ window.executeDirectBorrow = async function (memberId, bookId) {
     const b = libraryData.books.find(book => book.id === bookId);
 
     if (!m || !b) {
-        showAlertModal("Selection Error. Please try again.", "Error");
+        showAlertModal("Selection Error. Please try again.", "Error", 'error');
         return;
     }
 
     if (b.available === false) {
-        showAlertModal("This book is already borrowed.", "Error");
+        showAlertModal("This book is already borrowed.", "Error", 'error');
         return;
     }
 
@@ -1925,7 +1945,7 @@ window.executeDirectBorrow = async function (memberId, bookId) {
         closeSelectionModal();
         closeMemberDetail();
         window.closeBookDetail();
-        showAlertModal(`"${b.title}" has been borrowed by ${m.name}.`, "Success");
+        showAlertModal(`"${b.title}" has been borrowed by ${m.name}.`, "Success", 'success');
 
         // Re-render relevant views
         if (currentView === 'requests-view') {
@@ -1938,7 +1958,7 @@ window.executeDirectBorrow = async function (memberId, bookId) {
         }
     } catch (e) {
         console.error("Direct Borrow Error:", e);
-        showAlertModal("Failed to complete direct borrow. " + e.message, "Error");
+        showAlertModal("Failed to complete direct borrow. " + e.message, "Error", 'error');
     }
 };
 
