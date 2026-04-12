@@ -16,6 +16,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import {
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     onAuthStateChanged,
     signOut
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -56,6 +58,12 @@ const headerTitle = document.getElementById('header-title');
 const navItems = document.querySelectorAll('.nav-item');
 
 export function initApp() {
+    // Handle redirect result for APK/Mobile flow
+    getRedirectResult(auth).catch((error) => {
+        console.error("Redirect auth error:", error);
+        // Common error in restricted webviews, but we should log it
+    });
+
     // Monitor Auth State
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -225,8 +233,17 @@ function setupEventListeners() {
 
     document.getElementById('google-signin-btn').addEventListener('click', async () => {
         try {
-            await signInWithPopup(auth, googleProvider);
-            // closeAuthModal is handled by onAuthStateChanged
+            // Environment detection to choose best Auth flow
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+            if (isMobile || isStandalone) {
+                // Best for APKs and PWAs on mobile to avoid losing context
+                await signInWithRedirect(auth, googleProvider);
+            } else {
+                // Best for Desktop Web
+                await signInWithPopup(auth, googleProvider);
+            }
         } catch (error) {
             console.error("Login failed", error);
             showAlertModal("Sign in failed. Please try again.", "Error", 'error');
