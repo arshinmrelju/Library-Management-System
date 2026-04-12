@@ -229,6 +229,13 @@
     justify-content: center;
     gap: 8px;
     font-family: inherit;
+    /* iOS friendly button behavior */
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-primary {
@@ -333,6 +340,11 @@
     position: relative;
     overflow: hidden;
     min-width: 0;
+    /* iOS friendly behavior */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .book-card::after {
@@ -596,6 +608,11 @@
     box-shadow: var(--shadow-sm);
     min-width: 0;
     overflow: hidden;
+    /* iOS friendly behavior */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .genre-card:hover {
