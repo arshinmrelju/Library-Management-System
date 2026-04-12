@@ -19,7 +19,8 @@ import {
     getDoc,
     setDoc,
     startAfter,
-    where
+    where,
+    deleteField
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 let currentView = 'requests-view';
@@ -1366,6 +1367,7 @@ window.openBookForm = function (bookId = null) {
     const shelfField = document.getElementById('new-shelf');
     const rowField = document.getElementById('new-row');
     const checkboxes = document.querySelectorAll('input[name="category"]');
+    const deleteCoverBtn = document.getElementById('delete-cover-btn');
 
     // Reset checkboxes
     checkboxes.forEach(cb => cb.checked = false);
@@ -1388,6 +1390,10 @@ window.openBookForm = function (bookId = null) {
             checkboxes.forEach(cb => {
                 if (bookCat.includes(cb.value)) cb.checked = true;
             });
+
+            if (deleteCoverBtn) {
+                deleteCoverBtn.style.display = book.coverImageBase64 ? 'block' : 'none';
+            }
         }
     } else {
         title.textContent = 'New Book';
@@ -1397,6 +1403,7 @@ window.openBookForm = function (bookId = null) {
         langField.value = '2'; // Default English
         shelfField.value = '';
         rowField.value = '';
+        if (deleteCoverBtn) deleteCoverBtn.style.display = 'none';
         // Reset language dropdown UI
         if (window._setLanguageDropdown) window._setLanguageDropdown('2');
     }
@@ -1476,6 +1483,34 @@ async function deleteBook(id) {
         }
     }
 }
+
+window.deleteBookCover = async function () {
+    const editId = document.getElementById('edit-book-id').value;
+    if (!editId) return;
+
+    if (await window.showConfirmModal("Are you sure you want to completely remove this book's cover image?", "Delete Cover")) {
+        try {
+            await updateDoc(doc(db, "books", editId), {
+                coverImageBase64: deleteField()
+            });
+
+            // Update local cache
+            const idx = libraryData.books.findIndex(b => b.id === editId);
+            if (idx !== -1) {
+                delete libraryData.books[idx].coverImageBase64;
+            }
+
+            const deleteCoverBtn = document.getElementById('delete-cover-btn');
+            if (deleteCoverBtn) deleteCoverBtn.style.display = 'none';
+
+            showAlertModal("Cover image has been deleted.", "Success");
+            renderInventory();
+        } catch (e) {
+            console.error("Error deleting cover:", e);
+            showAlertModal("Failed to delete cover.", "Error");
+        }
+    }
+};
 
 window.printMemberList = function () {
     const list = libraryData.members.filter(m => m.status === 'approved');

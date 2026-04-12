@@ -1257,40 +1257,59 @@ function _captureFrame() {
     const videoRect = video.getBoundingClientRect();
     const frameRect = frame.getBoundingClientRect();
 
-    // Scale factor of the intrinsic video to cover the screen
-    const scale = Math.max(videoRect.width / video.videoWidth, videoRect.height / video.videoHeight);
-    
-    // Size of the video as it is internally rendered to cover the bounds
-    const renderedW = video.videoWidth * scale;
-    const renderedH = video.videoHeight * scale;
-    
-    // Object-fit: cover centers the rendering, calculate how much is clipped
+    let vw = video.videoWidth;
+    let vh = video.videoHeight;
+    if (!vw || !vh) return; // Video metadata not ready
+
+    // Workaround for iOS Safari swapping width/height on camera streams
+    if (videoRect.height > videoRect.width && vw > vh) {
+        vw = video.videoHeight;
+        vh = video.videoWidth;
+    } else if (videoRect.width > videoRect.height && vh > vw) {
+        vw = video.videoHeight;
+        vh = video.videoWidth;
+    }
+
+    // Mathematical equivalent of CSS object-fit: cover
+    const coverScale = Math.max(videoRect.width / vw, videoRect.height / vh);
+    const renderedW = vw * coverScale;
+    const renderedH = vh * coverScale;
+
+    // Center offsets for cover fitting
     const offsetX = (renderedW - videoRect.width) / 2;
     const offsetY = (renderedH - videoRect.height) / 2;
-    
-    // Map the UI frame coordinates back to the unscaled intrinsic video pixels
-    const cropX = (frameRect.left - videoRect.left + offsetX) / scale;
-    const cropY = (frameRect.top - videoRect.top + offsetY) / scale;
-    const cropW = frameRect.width / scale;
-    const cropH = frameRect.height / scale;
 
-    const MAX_W = 800, MAX_H = 1067;
-    let dstW = cropW;
-    let dstH = cropH;
+    // Set canvas dimensions to the green frame's size (capped at MAX)
+    let dstW = frameRect.width;
+    let dstH = frameRect.height;
+    const MAX_W = 800, MAX_H = 1067; // max output bounds
 
-    // Scale down if necessary
-    if (dstW > MAX_W) { dstH = Math.round(dstH * MAX_W / dstW); dstW = MAX_W; }
-    if (dstH > MAX_H) { dstW = Math.round(dstW * MAX_H / dstH); dstH = MAX_H; }
+    if (dstW > MAX_W) { dstH = dstH * (MAX_W / dstW); dstW = MAX_W; }
+    if (dstH > MAX_H) { dstW = dstW * (MAX_H / dstH); dstH = MAX_H; }
 
     canvas.width  = dstW;
     canvas.height = dstH;
     
-    // Draw ONLY the region inside the guide frame
-    canvas.getContext('2d').drawImage(
-        video, 
-        cropX, cropY, cropW, cropH, // Source cropping
-        0, 0, dstW, dstH            // Destination canvas
+    const ctx = canvas.getContext('2d');
+    
+    // Scale rendering from CSS pixels to exported image pixels
+    const outputScale = dstW / frameRect.width;
+
+    ctx.save();
+    
+    // 1. Scale to final output dimensions
+    ctx.scale(outputScale, outputScale);
+    
+    // 2. Shift the drawing origin so the green frame perfectly aligns to (0,0) in the canvas
+    ctx.translate(
+        -(frameRect.left - videoRect.left + offsetX), 
+        -(frameRect.top - videoRect.top + offsetY)
     );
+
+    // 3. Draw video using 5-args instead of 9-args to avoid iOS Safari source clipping bugs
+    ctx.drawImage(video, 0, 0, renderedW, renderedH);
+
+    ctx.restore();
 
     const proc = document.getElementById('scanner-processing');
     if (proc) proc.classList.add('active');
