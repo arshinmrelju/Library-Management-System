@@ -120,17 +120,34 @@ self.addEventListener('push', (event) => {
         }
     }
 
-    event.waitUntil(
-        self.registration.showNotification(data.title, {
-            body: data.body,
-            icon: data.icon || '/icon-512.png',
-            badge: data.badge || '/favicon.svg',
-            tag: data.tag || 'library-alert',
-            renotify: true,
-            vibrate: [200, 100, 200],
-            data: data.data || { url: '/admin.html' }
-        })
-    );
+    const showNotif = self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: data.icon || '/icon-512.png',
+        badge: data.badge || '/favicon.svg',
+        tag: data.tag || 'library-alert',
+        renotify: true,
+        vibrate: [200, 100, 200],
+        data: data.data || { url: '/admin.html' }
+    });
+
+    // ── Voice Bridge: Messaging clients to speak ────────────────────────────
+    const broadcastVoice = clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then((clientList) => {
+            clientList.forEach((client) => {
+                // Determine if this is a Malayalam payload (based on body text or custom field if added)
+                // For now, we pass the data and the client handles the translation logic if they have it
+                client.postMessage({
+                    type: 'SPEAK_NOTIFICATION',
+                    payload: {
+                        title: data.title,
+                        body: data.body,
+                        malayalamBody: data.malayalamBody // If the server sent a specific MAL body
+                    }
+                });
+            });
+        });
+
+    event.waitUntil(Promise.all([showNotif, broadcastVoice]));
 });
 
 // Handle notification click → focus or open the admin tab

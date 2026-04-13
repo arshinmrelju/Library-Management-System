@@ -39,6 +39,9 @@ let appVoices = [];
 
 let deferredPrompt = null;
 
+let lastSpokenText = "";
+let lastSpokenTime = 0;
+
 function loadVoices() {
     if (!window.speechSynthesis) return;
     appVoices = window.speechSynthesis.getVoices();
@@ -157,11 +160,73 @@ export function initAdmin() {
 
     setupDataListeners();
     initVoiceFeature();
+    setupBackgroundKeepAlive();
+    setupServiceWorkerMessaging();
     
     // Check PWA status (no auto-prompt for admin, only manual/debug for now)
     checkPwaStatus();
 
     lucide.createIcons();
+}
+
+/**
+ * Prevents the browser from suspending the JS thread when the app is minimized.
+ * Uses a tiny silent audio loop to maintain "Audio Focus".
+ */
+function setupBackgroundKeepAlive() {
+    console.log("[BackgroundSystem] Initializing Keep-Alive (Web Audio)...");
+    
+    let audioContext = null;
+
+    const startKeepAlive = () => {
+        try {
+            if (audioContext && audioContext.state === 'running') return;
+            
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            
+            audioContext = new AudioContext();
+            
+            // Create a silent oscillator to maintain audio focus
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            gainNode.gain.value = 0.001; // Extremely quiet but not zero (some browsers optimize away zero)
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            
+            console.log("[BackgroundSystem] Keep-Alive active (Web Audio)");
+        } catch (err) {
+            console.warn("[BackgroundSystem] Could not start Web Audio:", err);
+        }
+    };
+
+    // Browsers require a user gesture to start AudioContext
+    document.addEventListener('click', startKeepAlive, { once: true });
+    // Also try to start immediately (might work if already interacted)
+    startKeepAlive();
+}
+
+/**
+ * Listens for "speak" messages from the Service Worker.
+ * If the SW receives a push while the app is backgrounded, it sends a message here.
+ */
+function setupServiceWorkerMessaging() {
+    if (!('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SPEAK_NOTIFICATION') {
+            const { title, body, malayalamBody } = event.data.payload;
+            console.log("[MessagingBridge] Received speak request from SW:", title);
+            
+            // If the app is visible, it likely already spoke via the Firestore listener.
+            // If hidden, the Firestore listener might be throttled, so we speak now.
+            speakNotification(body || title, malayalamBody);
+        }
+    });
 }
 
 function checkPwaStatus(isManual = false) {
@@ -352,6 +417,16 @@ function initCustomDropdown(id, callback) {
 
 function speakNotification(text, malayalamText = null) {
     if (!voiceEnabled || !window.speechSynthesis) return;
+
+    // Deduplication: Prevent repeating the same message in a short window
+    const now = Date.now();
+    const memoKey = text + (malayalamText || "");
+    if (memoKey === lastSpokenText && (now - lastSpokenTime) < 3000) {
+        console.log("[VoiceSystem] Skipping duplicate speech request.");
+        return;
+    }
+    lastSpokenText = memoKey;
+    lastSpokenTime = now;
 
     // Refresh voices if empty
     if (appVoices.length === 0) appVoices = window.speechSynthesis.getVoices();
