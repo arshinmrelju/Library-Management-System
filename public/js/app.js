@@ -23,6 +23,10 @@ import {
 // Global Exports for inline onclick handlers
 window.navigateTo = navigateTo;
 window.updateNavActive = updateNavActive;
+window.openPwaModal = openPwaModal;
+window.closePwaModal = closePwaModal;
+
+let deferredPrompt = null;
 
 let currentUser = null;
 let currentView = 'welcome-view';
@@ -97,6 +101,100 @@ export function initApp() {
 
     setupEventListeners();
     navigateTo('welcome-view');
+
+    // Trigger PWA prompt if applicable
+    checkPwaStatus();
+}
+
+function checkPwaStatus(isManual = false) {
+    // Check if already in standalone mode
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
+    // Update manual button visibility
+    const manualBtn = document.getElementById('manual-install-btn');
+    if (manualBtn) {
+        manualBtn.style.display = (!isStandalone && (isManual || deferredPrompt || /iPad|iPhone|iPod/.test(navigator.userAgent))) ? 'flex' : 'none';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    if (isStandalone) return;
+
+    if (!isManual) {
+        // Check if dismissed recently (skip for 48 hours)
+        const lastPrompt = localStorage.getItem('pwa_prompt_dismissed');
+        if (lastPrompt) {
+            const hoursAgo = (Date.now() - parseInt(lastPrompt)) / (1000 * 60 * 60);
+            if (hoursAgo < 48) return;
+        }
+    }
+
+    // Show after 4 seconds for better engagement, or immediately if manual
+    const delay = isManual ? 0 : 4000;
+    setTimeout(() => {
+        // iOS Detection
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            openPwaModal('ios');
+        } else if (deferredPrompt) {
+            openPwaModal('android');
+        } else if (isManual) {
+            // If manual but no prompt yet, maybe it's not supported or not ready
+            showAlertModal("Installation is not supported on this browser or the app is already installed.", "Notice", "info");
+        }
+    }, delay);
+}
+
+window.checkPwaStatus = checkPwaStatus; // Export for inline onclick
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    
+    // If user is already on welcome view, maybe show it soon
+    if (currentView === 'welcome-view') {
+        checkPwaStatus();
+    }
+});
+
+function openPwaModal(type) {
+    const modal = document.getElementById('pwa-install-modal');
+    if (!modal) return;
+
+    const androidContent = document.getElementById('pwa-android-content');
+    const iosContent = document.getElementById('pwa-ios-content');
+
+    if (type === 'ios') {
+        androidContent.style.display = 'none';
+        iosContent.style.display = 'block';
+    } else {
+        androidContent.style.display = 'block';
+        iosContent.style.display = 'none';
+        
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+            installBtn.onclick = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('User accepted the A2HS prompt');
+                    closePwaModal();
+                }
+                deferredPrompt = null;
+            };
+        }
+    }
+
+    modal.style.display = 'flex';
+    if (window.lucide) lucide.createIcons();
+}
+
+function closePwaModal() {
+    const modal = document.getElementById('pwa-install-modal');
+    if (modal) modal.style.display = 'none';
+    localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
 }
 
 
