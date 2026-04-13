@@ -1,60 +1,76 @@
-# 🏛️ Navodhayam Library Web App
+<p align="center">
+  <img src="public/favicon.svg" width="120" height="120" alt="Navodhayam Logo">
+</p>
 
-Navodhayam Library is a professional, mobile-first digital library assistant designed for rural communities. It provides an intuitive interface for users to browse books, locate them on physical shelves, and request titles seamlessly. The app is powered by **Firebase** for real-time data synchronization and secure administrative control.
+<h1 align="center">Navodhayam Library</h1>
+
+<p align="center">
+  <b>A premium, mobile-first PWA digital library system designed for rural empowerment.</b>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white" alt="Firebase">
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
+  <img src="https://img.shields.io/badge/PWA-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA">
+  <img src="https://img.shields.io/badge/Capacitor-119EFF?style=for-the-badge&logo=capacitor&logoColor=white" alt="Capacitor">
+  <img src="https://img.shields.io/badge/Google_Sheets-34A853?style=for-the-badge&logo=google-sheets&logoColor=white" alt="Google Sheets">
+</p>
+
+---
+
+Navodhayam Library is a professional digital library assistant. It provides an intuitive interface for users to browse books, locate them on physical shelves, and request titles seamlessly. The app is powered by **Firebase** for real-time data synchronization and secure administrative control.
 
 ## ✨ Key Features
 
 ### 👤 User Interface & Experience
-- **📱 Premium PWA Experience**: Fully optimized Progressive Web App with custom installation prompts for Android, Desktop, and iOS. Supports offline access and "Add to Home Screen" functionality.
-- **📱 Professional Mobile-First UI**: Clean, modern design tailored for smartphones, using fast-loading inline SVG icons and fluid layout spacing.
-- **🚀 Glassmorphism Design System**: Harmonious color palettes, blurred backdrops, and subtle micro-animations for a premium, native-app feel.
-- **📷 Book Cover Scanning**: Integrated WhatsApp-style document scanner allowing users to snap, crop, and upload book covers directly from mobile devices.
-
-### 📚 Library Catalog
-- **🚀 High Performance & Pagination**: Optimized to handle large collections (5,000+ books) via paginated data loading, fetching manageable chunks to maintain lightning-fast render speeds.
-- **🔍 Multi-Dimensional Search**: Premium search dropdown interfaces supporting multi-criteria queries by Book ID, Member ID, Author name, and Title.
-- **🌐 Multilingual Support**: Built-in language mapping support for Malayalam, English, and Hindi to serve diverse community needs.
-- **📍 Physical Book Mapping**: Visual guides to help users find books on specific shelves and sections.
-- **📥 Frictionless Requests**: Users enter their Name and Phone Number to request a book; no complex account creation needed.
+- **📱 Premium PWA Experience**: Fully optimized Progressive Web App with custom glassmorphic installation prompts. Supports offline access via Service Workers.
+- **🎨 Modern Design System**: Vibrant HSL-tailored color palettes, dark mode support, glassmorphism, and smooth micro-animations.
+- **📷 Book Cover Scanning**: Integrated document scanner allowing users to snap, crop, and upload book covers directly from mobile devices.
+- **🔍 Advanced Search & Filter**: Paginated data loading for 5,000+ books with multi-criteria search (Book ID, Member ID, Author, Title).
 
 ### 🔐 Admin & Management
-- **📊 Complete Admin Dashboard**: A feature-rich secure portal to manage inventory, track member activity, approve new memberships, and manage the full borrowing lifecycle.
-- **🔔 Advanced Alerting System**: 
-    - **🎙️ Malayalam Voice Alerts**: Automated audio notifications in natural-sounding Malayalam for new requests.
-    - **📲 OS Push Notifications**: Browser-level alerts for real-time administrative monitoring, even when the tab is in the background.
-- **🛠️ Debug & Sync Tools**: Hidden Secret Sync Panel (revealed by triple-tapping the header title) for real-time monitoring of Google Sheets integration data flow and manual PWA test triggers.
-- **🚀 Direct Admin Borrowing**: Assign books directly to members from the admin panel with intuitive, custom-branded confirmation modals.
-- **🔄 Real-Time UI Updates**: Instantaneous UI reflection for approvals, returns, and issues without page refreshes, powered by Firestore live listeners.
-- **📑 Reporting & PDF Exports**: Manage comprehensive borrowing histories with one-click PDF generation for offline records.
+- **🎙️ Malayalam Voice Alerts**: Automated audio notifications for new requests using optimized Web Speech detection.
+- **📲 OS Push Notifications**: Real-time browser-level alerts even when the librarian portal is in the background.
+- **🛠️ Hidden Debug Suite**: A secret 3-tap sync panel for monitoring data flow from Google Sheets and testing PWA triggers.
+- **🔄 real-time Sync**: Instant Firestore synchronization ensures librarians and users are always looking at the latest data.
+
+## 🛠️ Technical Stack
+
+| Category | Technologies |
+| :--- | :--- |
+| **Frontend Core** | HTML5, Vanilla JavaScript (ES6 Modules), CSS3 (Custom Design System) |
+| **PWA & Mobile** | Service Workers, Manifest API, **CapacitorJS** (for Native APK support) |
+| **Backend & Auth** | **Firebase** (Firestore, Authentication via Google, Storage, Hosting) |
+| **Icons & UI** | **Lucide Icons**, Inline SVG Symbols, Glassmorphism Backdrop Effects |
+| **Data Ingestion** | **Google Apps Script** (Automated batch sync from Google Sheets) |
+| **Notifications** | Browser Notification API, Web Speech API (Malayalam prioritized) |
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-- A modern web browser (Chrome/Safari recommended for PWA features).
-- A **Firebase Project** (Create one at [console.firebase.google.com](https://console.firebase.google.com/)).
+- Modern browser (Chrome/Safari recommended)
+- Firebase Project setup
 
-### 2. Configuration
-1. Enable **Firestore Database**, **Authentication** (Google & Email/Password), and **Storage** in your Firebase Console.
-2. In your Project Settings, register a Web App and copy the `firebaseConfig` object.
-3. Open `public/js/firebase-config.js` and paste your configuration.
-
-### 3. Installation & Run
-1. Clone the repository:
+### 2. Quick Setup
+1. Clone the repo:
    ```bash
    git clone https://github.com/arshinmrelju/Navodaya-Library.git
    ```
-2. Deploy to Firebase Hosting:
+2. Configure `public/js/firebase-config.js` with your Firebase credentials.
+3. Deploy:
    ```bash
    firebase deploy
    ```
-3. Access the Librarian Portal at `public/admin.html`.
 
-## 🛠️ Technical Stack
-- **Frontend**: HTML5, CSS3 (Glassmorphism Design System, Lucide Icons, Custom SVG Symbols)
-- **Logic**: Vanilla JavaScript (ES6 Modules, Service Workers, Web Speech API, Notification API)
-- **Backend/Database**: Firebase (Firestore, Authentication, Storage, Hosting)
-- **Data Pipeline**: Google Apps Script (Batch Data Sync from Google Sheets)
-- **Mobile/Native**: Capacitor (for APK generation support)
+## 📐 Project Architecture
+- **Web App**: Single Page Application (SPA) architecture with modular JS.
+- **PWA**: Service Worker caching strategy for lightning-fast repeated loads and offline request visibility.
+- **Data flow**: Google Sheets (Source) -> Apps Script -> Firebase Firestore (Live DB) -> Navodhayam UI.
 
-## ⚖️ License
-This project is open-source and designed for community use. Developed by Dept. of English Interns at **Pazhassiraja College**.
+## 🤝 Credits & Contributors
+Developed by Dept. of English Interns at **Pazhassiraja College** to empower rural communities through organized knowledge access.
+
+---
+<p align="center">
+  © 2026 Navodhayam. Open Source for Community Use.
+</p>
