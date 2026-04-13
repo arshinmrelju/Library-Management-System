@@ -610,6 +610,11 @@
                     <span id="sync-percent-text"
                         style="font-size:11px; font-weight:800; color:var(--primary-color);">0%</span>
                 </div>
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                    <button class="btn glass" style="padding: 8px 12px; font-size: 11px; color: var(--primary-color); border-radius: 8px;" onclick="checkPwaStatus(true)">
+                        <i data-lucide="download" style="width: 14px; height: 14px; margin-right: 4px; vertical-align: middle;"></i> Trigger PWA Prompt
+                    </button>
+                </div>
             </div>
 
             <!-- Dashboard/Requests View -->
@@ -1043,6 +1048,47 @@
             <p id="alert-modal-desc" style="color:var(--text-secondary); font-size:14px; margin-bottom:24px;"></p>
             <button type="button" class="btn btn-primary w-100" style="padding: 14px;"
                 onclick="closeAlertModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- PWA Installation Modal -->
+    <div id="pwa-install-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center; position: relative;">
+            <div style="position: absolute; top: 16px; right: 16px;">
+                <button onclick="closePwaModal()" style="background: none; border: none; color: var(--text-muted); padding: 8px;">
+                    <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+
+            <div style="margin: 8px 0 24px 0;">
+                <div style="width: 80px; height: 80px; background: var(--glass-bg); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                    <img src="favicon.svg" alt="App Icon" style="width: 48px; height: 48px;">
+                </div>
+                <h3>Navodhayam Admin</h3>
+                <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5;">Install the admin portal for a faster, offline-ready experience right from your home screen.</p>
+            </div>
+
+            <div id="pwa-android-content" style="display: none;">
+                <button id="pwa-install-btn" class="btn btn-primary w-100" style="padding: 16px; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i data-lucide="download"></i> Install Application
+                </button>
+            </div>
+
+            <div id="pwa-ios-content" style="display: none;">
+                <div class="ios-install-guide" style="text-align: left; background: var(--bg-color); padding: 16px; border-radius: 16px; border: 1px solid var(--border-color);">
+                    <p style="font-size: 13px; font-weight: 700; color: var(--primary-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="apple" style="width: 16px;"></i> How to install on iOS:
+                    </p>
+                    <ol style="padding-left: 20px; margin: 0; font-size: 13px; color: var(--text-secondary); display: flex; flex-direction: column; gap: 8px;">
+                        <li>Tap the <strong>Share</strong> button <i data-lucide="share" style="width: 14px; vertical-align: middle; display: inline;"></i> in Safari.</li>
+                        <li>Scroll down and select <strong>'Add to Home Screen'</strong> <i data-lucide="plus-square" style="width: 14px; vertical-align: middle; display: inline;"></i>.</li>
+                        <li>Tap <strong>'Add'</strong> in the top right corner.</li>
+                    </ol>
+                </div>
+                <button onclick="closePwaModal()" class="btn w-100" style="margin-top: 16px; padding: 14px; background: white; border: 1px solid var(--border-color); color: var(--text-primary); font-weight: 700;">Got it!</button>
+            </div>
+
+            <button type="button" class="close-modal" onclick="closePwaModal()" style="margin-top: 20px;">Maybe Later</button>
         </div>
     </div>
 

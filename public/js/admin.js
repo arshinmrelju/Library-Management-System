@@ -37,6 +37,8 @@ let isFirstRequestsLoad = true;
 let isFirstMembersLoad = true;
 let appVoices = [];
 
+let deferredPrompt = null;
+
 function loadVoices() {
     if (!window.speechSynthesis) return;
     appVoices = window.speechSynthesis.getVoices();
@@ -155,8 +157,81 @@ export function initAdmin() {
 
     setupDataListeners();
     initVoiceFeature();
+    
+    // Check PWA status (no auto-prompt for admin, only manual/debug for now)
+    checkPwaStatus();
+
     lucide.createIcons();
 }
+
+function checkPwaStatus(isManual = false) {
+    // Check if already in standalone mode
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
+    if (isStandalone) {
+        if (isManual) showAlertModal("The app is already installed and running in standalone mode.", "Done", "info");
+        return;
+    }
+
+    if (isManual) {
+        // iOS Detection
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            openPwaModal('ios');
+        } else if (deferredPrompt) {
+            openPwaModal('android');
+        } else {
+            showAlertModal("Installation is not supported on this browser or the event hasn't fired yet.", "Notice", "info");
+        }
+    }
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+});
+
+function openPwaModal(type) {
+    const modal = document.getElementById('pwa-install-modal');
+    if (!modal) return;
+
+    const androidContent = document.getElementById('pwa-android-content');
+    const iosContent = document.getElementById('pwa-ios-content');
+
+    if (type === 'ios') {
+        androidContent.style.display = 'none';
+        iosContent.style.display = 'block';
+    } else {
+        androidContent.style.display = 'block';
+        iosContent.style.display = 'none';
+        
+        const installBtn = document.getElementById('pwa-install-btn');
+        if (installBtn) {
+            installBtn.onclick = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('[PWA] Admin portal installed');
+                    closePwaModal();
+                }
+                deferredPrompt = null;
+            };
+        }
+    }
+
+    modal.style.display = 'flex';
+    if (window.lucide) lucide.createIcons();
+}
+
+function closePwaModal() {
+    const modal = document.getElementById('pwa-install-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+window.checkPwaStatus = checkPwaStatus;
+window.openPwaModal = openPwaModal;
+window.closePwaModal = closePwaModal;
 
 
 
