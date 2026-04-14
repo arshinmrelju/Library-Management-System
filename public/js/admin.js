@@ -702,6 +702,18 @@ function setupListeners() {
     });
     // Expose setter globally so openBookForm can reset it
     window._setLanguageDropdown = setLanguage;
+
+    // Member Registration Form: Enter key support
+    ['member-new-name', 'member-new-phone', 'member-new-age', 'member-new-address',
+     'member-new-email', 'member-new-recommender', 'member-new-blood', 
+     'member-new-deposit', 'member-new-joined'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveMember();
+            });
+        }
+    });
 }
 
 function setupDataListeners() {
@@ -1942,6 +1954,119 @@ window.saveBook = async function () {
     // Always close the form and re-render
     closeBookForm();
     renderInventory();
+};
+
+window.openMemberForm = function () {
+    const formContainer = document.getElementById('member-form-container');
+    const fields = [
+        'member-new-name', 'member-new-phone', 'member-new-email', 
+        'member-new-address', 'member-new-age', 'member-new-recommender',
+        'member-new-blood', 'member-new-deposit', 'member-new-joined'
+    ];
+
+    fields.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.value = '';
+    });
+
+    // Set default joining date to today
+    const joinedField = document.getElementById('member-new-joined');
+    if (joinedField) {
+        const today = new Date().toISOString().split('T')[0];
+        joinedField.value = today;
+    }
+
+    formContainer.style.display = 'block';
+    if (window.lucide) lucide.createIcons();
+
+    // Auto-scroll to form on mobile
+    formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.closeMemberForm = function () {
+    const formContainer = document.getElementById('member-form-container');
+    if (formContainer) formContainer.style.display = 'none';
+};
+
+window.saveMember = async function () {
+    const name = document.getElementById('member-new-name').value.trim();
+    const phone = document.getElementById('member-new-phone').value.trim();
+    const address = document.getElementById('member-new-address').value.trim();
+    
+    // Optional/Sync-critical Fields
+    const email = document.getElementById('member-new-email').value.trim();
+    const age = document.getElementById('member-new-age').value.trim();
+    const recommender = document.getElementById('member-new-recommender').value.trim();
+    const bloodGroup = document.getElementById('member-new-blood').value.trim();
+    const deposit = document.getElementById('member-new-deposit').value.trim();
+    const joiningDate = document.getElementById('member-new-joined').value.trim();
+
+    if (!name || !phone || !address) {
+        showAlertModal("Please fill in all required fields (Name, Phone, Address).", "Missing Information");
+        return;
+    }
+
+    const saveBtn = document.querySelector('#member-form-container .btn-primary');
+    const originalBtnHtml = saveBtn ? saveBtn.innerHTML : 'Save Member';
+
+    try {
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-small"></span> Saving...';
+        }
+
+        // Fetch current max ID to generate next sequential ID
+        const q = query(collection(db, "members"), orderBy("memberId", "desc"), limit(100));
+        const snap = await getDocs(q);
+        let nextId = 1;
+
+        if (!snap.empty) {
+            const ids = snap.docs.map(d => parseInt(d.data().memberId) || 0);
+            const maxId = Math.max(...ids);
+            nextId = maxId + 1;
+        }
+
+        const newDocId = `MEM_${nextId}`;
+        const newDocRef = doc(db, "members", newDocId);
+
+        const newMemberData = {
+            name,
+            phone,
+            address,
+            email: email || "",
+            age: age || "",
+            recommender: recommender || "",
+            bloodGroup: bloodGroup || "",
+            deposit: deposit || "0",
+            joiningDate: joiningDate || new Date().toISOString().split('T')[0],
+            status: 'approved',
+            vitalStatus: 'Active',
+            memberId: String(nextId),
+            timestamp: serverTimestamp(),
+            last_updated: serverTimestamp(),
+            source: 'admin_added'
+        };
+
+        await setDoc(newDocRef, newMemberData);
+
+        // Update local cache for instant UI feedback
+        const memberWithId = { id: newDocId, ...newMemberData, timestamp: { seconds: Math.floor(Date.now() / 1000) } };
+        libraryData.members.unshift(memberWithId);
+        
+        showAlertModal(`Member registered successfully! Assigned ID: ${nextId}`, "Success", 'success');
+        
+        closeMemberForm();
+        if (currentView === 'members-view') renderMembers();
+
+    } catch (e) {
+        console.error("Error adding member:", e);
+        showAlertModal("Failed to add member: " + e.message, "Error", 'error');
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnHtml;
+        }
+    }
 };
 
 window.showAlertModal = function (message, title = "Notice", type = 'warning') {
