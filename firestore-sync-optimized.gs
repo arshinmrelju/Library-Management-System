@@ -255,12 +255,17 @@ function syncMembersFromSheet() {
  * 📥 FIRESTORE → SHEET (Reverse Member Sync)
  */
 function syncMembersFromFirestore() {
+  console.log("--- Starting Member Sync from Firestore ---");
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SYNC_CONFIG_MEMBERS.SHEET_NAME);
-  if (!sheet) return;
+  if (!sheet) {
+    console.error("Sheet '" + SYNC_CONFIG_MEMBERS.SHEET_NAME + "' not found!");
+    return;
+  }
 
   const props = PropertiesService.getScriptProperties();
   const lastFsSyncTime = props.getProperty('LAST_FS_MEMBER_SYNC_TIME') || "2000-01-01T00:00:00Z";
+  console.log("Syncing changes after: " + lastFsSyncTime);
   
   const token = ScriptApp.getOAuthToken();
   // Filter for members updated since last sync. 
@@ -295,7 +300,12 @@ function syncMembersFromFirestore() {
   }
 
   const results = JSON.parse(response.getContentText());
-  if (!results || results.length === 0) return;
+  console.log("Documents fetched: " + (results.length || 0));
+  
+  if (!results || results.length === 0 || (results.length === 1 && !results[0].document)) {
+    console.log("No new updates found.");
+    return;
+  }
 
   const sheetData = sheet.getDataRange().getValues();
   const emailCol = 6; // Column G (0-indexed)
@@ -305,9 +315,15 @@ function syncMembersFromFirestore() {
     if (!res.document) return;
     const fields = res.document.fields;
     const member = decodeFirestoreFields(fields);
+    member.id = res.document.name.split('/').pop();
     
+    console.log("Processing Member: " + (member.name || "Unknown") + " | ID: " + (member.memberId || "No ID"));
+
     // SKIP if this document was just pushed from the sheet to prevent loops
-    if (member.source === 'sheet') return;
+    if (member.source === 'sheet') {
+      console.log("Skipping member-from-sheet loop.");
+      return;
+    }
 
     // Find matching row in sheet
     let rowIndex = -1;
@@ -338,16 +354,27 @@ function syncMembersFromFirestore() {
 
     if (rowIndex > 0) {
       // Update existing
+      console.log("Updating row " + rowIndex);
       sheet.getRange(rowIndex, 1, 1, 14).setValues([rowData]);
-      console.log(`Updated member in sheet: ${member.name}`);
     } else {
-      // Append new
+      // Find max SI and increment
+      let maxSI = 0;
+      for (let i = 1; i < sheetData.length; i++) {
+        const val = parseInt(sheetData[i][0]);
+        if (!isNaN(val) && val > maxSI) maxSI = val;
+      }
+      const nextSI = maxSI + 1;
+      rowData[0] = nextSI;
+      
+      console.log("Appending new member with SI: " + nextSI);
       sheet.appendRow(rowData);
-      console.log(`Appended new member to sheet: ${member.name}`);
+      // Refresh sheetData if we append multiple rows in one run
+      sheetData.push(rowData);
     }
   });
 
   props.setProperty('LAST_FS_MEMBER_SYNC_TIME', new Date().toISOString());
+  console.log("--- Sync Complete ---");
 }
 
 /**
@@ -356,9 +383,16 @@ function syncMembersFromFirestore() {
 function decodeFirestoreFields(fields) {
   const data = {};
   for (const key in fields) {
-    if (fields[key].stringValue !== undefined) data[key] = fields[key].stringValue;
-    else if (fields[key].booleanValue !== undefined) data[key] = fields[key].booleanValue;
-    else if (fields[key].integerValue !== undefined) data[key] = fields[key].integerValue;
+    const val = fields[key];
+    if (val.stringValue !== undefined) data[key] = val.stringValue;
+    else if (val.booleanValue !== undefined) data[key] = val.booleanValue;
+    else if (val.integerValue !== undefined) data[key] = val.integerValue;
+    else if (val.doubleValue !== undefined) data[key] = val.doubleValue;
+    else if (val.timestampValue !== undefined) data[key] = val.timestampValue;
+    else if (val.nullValue !== undefined) data[key] = null;
+    else if (val.mapValue !== undefined) {
+      data[key] = decodeFirestoreFields(val.mapValue.fields);
+    }
   }
   return data;
 }
