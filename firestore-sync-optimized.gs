@@ -206,6 +206,7 @@ function syncMembersFromSheet() {
       bloodGroup: String(row[8] || ""),
       joiningDate: String(row[9] || ""),
       deposit: String(row[10] || ""),
+      vitalStatus: String(row[11] || "Active").trim(), // 🔥 Read Column L (Active/Deceased)
       status: 'approved', // 🔥 Force 'approved' for all sheet members so they show up in the app
       timestamp: new Date().toISOString(),
       last_updated: new Date().toISOString(),
@@ -330,7 +331,7 @@ function syncMembersFromFirestore() {
       member.bloodGroup || "",
       member.joiningDate || "",
       member.deposit || "",
-      member.status || "pending"
+      member.vitalStatus || "Active" // Column L (Status)
     ];
 
     if (rowIndex > 0) {

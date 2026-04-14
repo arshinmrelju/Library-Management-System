@@ -1087,18 +1087,31 @@ async function fetchBorrowsBatch() {
 function renderMembers() {
     const pendingList = document.getElementById('pending-members-list');
     const approvedList = document.getElementById('approved-members-list');
+    const deceasedList = document.getElementById('deceased-members-list');
     const pagination = document.getElementById('members-pagination');
-    if (!pendingList || !approvedList) return;
+    if (!pendingList || !approvedList || !deceasedList) return;
 
     pendingList.innerHTML = '';
     approvedList.innerHTML = '';
+    deceasedList.innerHTML = '';
 
     const searchTerm = document.getElementById('member-search-input')?.value.trim().toLowerCase() || '';
     const searchField = libraryData.memberSearchType || 'name';
 
     const pendings = libraryData.members.filter(m => m.status === 'pending');
+    
+    // 🔥 Separate Active and Deceased members
     const approved = libraryData.members.filter(m => {
-        if (m.status !== 'approved') return false;
+        if (m.status !== 'approved' || m.vitalStatus === 'Deceased') return false;
+        if (searchTerm) {
+            const fieldValue = m[searchField] ? String(m[searchField]).toLowerCase() : '';
+            return fieldValue.includes(searchTerm);
+        }
+        return true;
+    });
+
+    const deceased = libraryData.members.filter(m => {
+        if (m.status !== 'approved' || m.vitalStatus !== 'Deceased') return false;
         if (searchTerm) {
             const fieldValue = m[searchField] ? String(m[searchField]).toLowerCase() : '';
             return fieldValue.includes(searchTerm);
@@ -1115,6 +1128,7 @@ function renderMembers() {
 
     pendings.sort(sortById);
     approved.sort(sortById);
+    deceased.sort(sortById);
 
     if (pendings.length === 0) {
         pendingList.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No pending applications.</p>';
@@ -1183,6 +1197,32 @@ function renderMembers() {
         });
     }
 
+    if (deceased.length === 0 && !libraryData.isMembersLoading) {
+        deceasedList.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No deceased records.</p>';
+    } else {
+        deceased.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'book-card req-card';
+            card.style.cursor = 'pointer';
+            card.style.opacity = '0.7'; // Slight fade for deceased members
+            card.innerHTML = `
+                <div class="req-header">
+                    <span class="req-user">${m.name}</span>
+                    <span style="color:var(--text-muted); font-weight:700;">DECEASED</span>
+                </div>
+                <div class="req-info">
+                    ${m.photoURL ? `<img src="${m.photoURL}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; filter: grayscale(1);">` : `<div class="book-img-placeholder" style="width:50px; height:50px; border-radius:50%; background:#e2e8f0; color:#94a3b8;"><svg class="lucide" style="width:24px; height:24px;"><use href="#icon-users"/></svg></div>`}
+                    <div class="book-info">
+                        <p style="font-size:14px; margin:0; font-weight:bold;">ID: ${m.memberId}</p>
+                        <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0 0;">Reported: ${m.last_updated ? new Date(m.last_updated).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                </div>
+            `;
+            deceasedList.appendChild(card);
+            card.onclick = () => showMemberDetail(m.id);
+        });
+    }
+
     // Render Load More button for members
     if (libraryData.membersHasMore) {
         pagination.innerHTML = `
@@ -1247,8 +1287,12 @@ window.showMemberDetail = function (memberId) {
     const modal = document.getElementById('member-detail-modal');
     const content = document.getElementById('member-detail-content');
 
+    const isDeceased = m.vitalStatus === 'Deceased';
+
     const statusBadge = m.status === 'approved'
-        ? '<span style="background:#ecfdf5; color:#059669; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase;">Active Member</span>'
+        ? (isDeceased 
+            ? '<span style="background:#f1f5f9; color:#64748b; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; border:1px solid #e2e8f0;">Deceased Record</span>'
+            : '<span style="background:#ecfdf5; color:#059669; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase;">Active Member</span>')
         : '<span style="background:#fff7ed; color:#9a3412; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase;">Pending Approval</span>';
 
     const memberRequests = libraryData.requests ? libraryData.requests.filter(req => {
@@ -1390,6 +1434,11 @@ window.showMemberDetail = function (memberId) {
             <button class="btn btn-primary w-100" style="padding: 16px; background: #083344; display: flex; align-items:center; justify-content:center; gap:8px;" onclick="printMemberCard('${m.id}')">
                 <i data-lucide="credit-card" style="width:20px; height:20px;"></i>
                 Print Library Card (PDF)
+            </button>
+            
+            <button class="btn ${isDeceased ? 'btn-success' : 'btn-danger-soft'} w-100" style="padding: 16px; display: flex; align-items:center; justify-content:center; gap:8px;" onclick="window.toggleMemberVitality('${m.id}', ${!isDeceased})">
+                <i data-lucide="${isDeceased ? 'user-check' : 'user-x'}" style="width:20px; height:20px;"></i>
+                Mark as ${isDeceased ? 'Active Member' : 'Deceased'}
             </button>` : ''}
         </div>
 
@@ -1526,6 +1575,42 @@ window.rejectMember = async function (id) {
         } catch (e) {
             console.error(e);
             showAlertModal("Failed to reject member.", "Error", 'error');
+        }
+    }
+};
+
+window.toggleMemberVitality = async function (id, markDeceased) {
+    const statusText = markDeceased ? "Deceased" : "Active";
+    const confirmMsg = markDeceased 
+        ? "Are you sure you want to mark this member as DECEASED? They will be moved to the Deceased tab."
+        : "Restore this member to ACTIVE status?";
+
+    if (await window.showConfirmModal(confirmMsg, `Mark as ${statusText}`)) {
+        try {
+            const memberRef = doc(db, "members", id);
+            const statusValue = markDeceased ? "Deceased" : "Active";
+            
+            // Update local cache for instant UI feedback
+            const mIdx = libraryData.members.findIndex(m => m.id === id);
+            if (mIdx !== -1) {
+                libraryData.members[mIdx].vitalStatus = statusValue;
+                libraryData.members[mIdx].last_updated = new Date().toISOString();
+            }
+            
+            if (currentView === 'members-view') renderMembers();
+            
+            await updateDoc(memberRef, { 
+                vitalStatus: statusValue,
+                last_updated: serverTimestamp() 
+            });
+            
+            showAlertModal(`Member marked as ${statusValue}.`, "Success", 'success');
+            
+            // Close detail modal since the list has changed
+            closeMemberDetail();
+        } catch (e) {
+            console.error("Error toggling vitality:", e);
+            showAlertModal("Failed to update status. " + e.message, "Error", 'error');
         }
     }
 };

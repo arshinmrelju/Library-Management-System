@@ -930,6 +930,7 @@
                 <div class="sub-nav-container" id="members-sub-nav">
                     <button class="sub-nav-chip active" data-sub="members-pending">Pending</button>
                     <button class="sub-nav-chip" data-sub="members-approved">Members</button>
+                    <button class="sub-nav-chip" data-sub="members-deceased">Deceased</button>
                 </div>
 
                 <!-- Subview: Pending Members -->
@@ -979,6 +980,12 @@
 
                     <div id="approved-members-list" class="book-list"></div>
                     <div id="members-pagination" style="margin-top: 16px;"></div>
+                </div>
+
+                <!-- Subview: Deceased Members -->
+                <div id="subview-members-deceased" class="sub-view-container" style="display: none;">
+                    <h2 class="view-title">Deceased Members</h2>
+                    <div id="deceased-members-list" class="book-list"></div>
                 </div>
                 <footer class="app-footer">
                     <div class="footer-container">
