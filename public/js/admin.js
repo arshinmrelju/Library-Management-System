@@ -23,6 +23,56 @@ import {
     deleteField
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+/** 
+ * 🛠️ REMOTE LOGGER
+ * Captures errors and logs them to Firestore for remote debugging.
+ */
+class RemoteLogger {
+    static async log(level, message, context = {}) {
+        const logData = {
+            level,
+            message,
+            context,
+            timestamp: serverTimestamp(),
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            adminEmail: auth.currentUser ? auth.currentUser.email : 'not_logged_in'
+        };
+        console[level](`[RemoteLog] ${message}`, context);
+        try {
+            await addDoc(collection(db, "system_logs"), logData);
+        } catch (e) {
+            console.error("Critical: Failed to send log to Firestore", e);
+        }
+    }
+
+    static error(message, error = null) {
+        this.log('error', message, {
+            errorName: error?.name,
+            errorMessage: error?.message,
+            errorStack: error?.stack
+        });
+    }
+
+    static warn(message, context = {}) {
+        this.log('warn', message, context);
+    }
+
+    static info(message, context = {}) {
+        this.log('info', message, context);
+    }
+}
+
+// Global error handler
+window.addEventListener('error', (event) => {
+    RemoteLogger.error(`Uncaught Error: ${event.message}`, event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    RemoteLogger.error(`Unhandled Promise Rejection: ${event.reason}`);
+});
+
+
 let currentView = 'requests-view';
 let currentRequestSubView = 'requests';
 let currentMembersSubView = 'members-pending';
@@ -1931,7 +1981,20 @@ window.saveBook = async function () {
         last_updated: serverTimestamp()
     };
 
-    if (!bookData.title || !bookData.author) return;
+    // --- STRICT VALIDATION ---
+    if (!bookData.title || bookData.title.length < 2) {
+        showAlertModal("Book Title is too short or missing.", "Validation Error");
+        return;
+    }
+    if (!bookData.author || bookData.author.length < 2) {
+        showAlertModal("Author name is too short or missing.", "Validation Error");
+        return;
+    }
+    if (selectedCats.length === 0) {
+        showAlertModal("Please select at least one category.", "Validation Error");
+        return;
+    }
+
 
     try {
         if (editId) {
@@ -2002,8 +2065,28 @@ window.saveMember = async function () {
     const deposit = document.getElementById('member-new-deposit').value.trim();
     const joiningDate = document.getElementById('member-new-joined').value.trim();
 
-    if (!name || !phone || !address) {
-        showAlertModal("Please fill in all required fields (Name, Phone, Address).", "Missing Information");
+    // --- STRICT VALIDATION ---
+    if (!name || name.length < 3) {
+        showAlertModal("Please enter a valid full name (min 3 chars).", "Validation Error");
+        return;
+    }
+    
+    const phoneRegex = /^[0-9+ ]{10,15}$/;
+    if (!phoneRegex.test(phone)) {
+        showAlertModal("Please enter a valid phone number (10-15 digits).", "Validation Error");
+        return;
+    }
+
+    if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showAlertModal("Please enter a valid email address.", "Validation Error");
+            return;
+        }
+    }
+
+    if (!address || address.length < 5) {
+        showAlertModal("Please enter a detailed address.", "Validation Error");
         return;
     }
 

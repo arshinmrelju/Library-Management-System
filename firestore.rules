@@ -6,16 +6,13 @@ service cloud.firestore {
     // HELPER FUNCTIONS
     // ==========================================
     
-    // Check if the user is a logged-in administrator
-    // Replace 'YOUR_ADMIN_EMAIL@gmail.com' with your actual email
     function isAdmin() {
       return request.auth != null && (
         request.auth.token.email == 'navodhayamlibraryamarakuni@gmail.com' || 
-        request.auth.token.email.endsWith('@navodhayam-library.firebaseapp.com')
+        request.auth.token.email.matches('.*@navodhayam-library\\.firebaseapp\\.com')
       );
     }
 
-    // Check if the document belongs to the authenticated user
     function isOwner(data) {
       return request.auth != null && (
         request.auth.uid == data.uid || 
@@ -25,37 +22,67 @@ service cloud.firestore {
     }
 
     // ==========================================
+    // SCHEMA VALIDATION
+    // ==========================================
+
+    function isValidBook(data) {
+      return data.title is string && data.title.size() >= 2 &&
+             data.author is string && data.author.size() >= 2 &&
+             data.category is string &&
+             data.available is bool;
+    }
+
+    function isValidMember(data) {
+      return data.name is string && data.name.size() >= 3 &&
+             data.phone is string && data.phone.matches('^[0-9+ ]{10,15}$') &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             (data.vitalStatus == null || data.vitalStatus in ['Active', 'Deceased']);
+    }
+
+    function isValidRequest(data) {
+      return data.bookId is string &&
+             data.bookTitle is string &&
+             data.status in ['pending', 'borrowed', 'returned', 'rejected'];
+    }
+
+    // ==========================================
     // COLLECTION RULES
     // ==========================================
 
-    // BOOKS: Publicly viewable. Admin can write all fields.
-    // Authenticated users (borrowers) may update ONLY the cover image fields.
     match /books/{bookId} {
       allow read: if true;
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || canUpdateCoverOnly();
+      allow create, delete: if isAdmin() && isValidBook(request.resource.data);
+      allow update: if isAdmin() || (canUpdateCoverOnly() && isValidBook(request.resource.data));
     }
 
-    // Allows any logged-in user to update only the book cover fields
     function canUpdateCoverOnly() {
       return request.auth != null &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['coverImageBase64', 'coverUpdatedAt']);
     }
 
-    // MEMBERS: Users can apply and see their own status. Admin manages all.
     match /members/{memberId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && isValidMember(request.resource.data);
       allow get: if isAdmin() || isOwner(resource.data);
       allow list: if isAdmin();
-      allow update, delete: if isAdmin();
+      allow update, delete: if isAdmin() && isValidMember(request.resource.data);
     }
 
-    // REQUESTS: Users can create and see their own. Admin manages all.
     match /requests/{requestId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null && isValidRequest(request.resource.data);
       allow read: if isAdmin() || isOwner(resource.data);
-      allow update, delete: if isAdmin();
+      allow update, delete: if isAdmin() && isValidRequest(request.resource.data);
+    }
+
+    match /system_logs/{logId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /metadata/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
+
