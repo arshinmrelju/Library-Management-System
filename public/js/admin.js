@@ -99,7 +99,9 @@ let libraryData = {
     isMembersLoading: false,
     isBorrowsLoading: false,
     inventorySearchType: 'title',
-    memberSearchType: 'name'
+    memberSearchType: 'name',
+    totalBooks: 0,
+    borrowedCount: 0
 };
 
 export function initAdmin() {
@@ -783,6 +785,15 @@ function setupDataListeners() {
     // Initial fetch for BOOKS - Paginated
     fetchBooksBatch();
 
+    // Listen for BORROWED books count (Real-time)
+    const bq = query(collection(db, "books"), where("available", "==", false));
+    onSnapshot(bq, (snapshot) => {
+        libraryData.borrowedCount = snapshot.size;
+        renderInventoryStats();
+    }, (error) => {
+        console.error("Borrowed Books Listener Error:", error);
+    });
+
     // Listen for Cloud Sync Progress (from Sheets)
     setupSyncProgress();
 }
@@ -811,6 +822,9 @@ function setupSyncProgress() {
 
         const synced = parseInt(data.synced_books) || 0;
         const total = parseInt(data.total_books) || 0;
+        
+        libraryData.totalBooks = total;
+        renderInventoryStats();
         const left = Math.max(0, total - synced);
 
         if (container) {
@@ -1549,6 +1563,14 @@ async function updateRequestStatus(reqId, newStatus, bookId) {
     } catch (e) {
         console.error(e);
     }
+}
+
+function renderInventoryStats() {
+    const totalEl = document.getElementById('stat-total-books');
+    const borrowedEl = document.getElementById('stat-borrowed-books');
+
+    if (totalEl) totalEl.textContent = libraryData.totalBooks.toLocaleString();
+    if (borrowedEl) borrowedEl.textContent = libraryData.borrowedCount.toLocaleString();
 }
 
 function renderInventory() {

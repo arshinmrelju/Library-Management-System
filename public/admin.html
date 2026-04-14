@@ -705,9 +705,30 @@
 
             <!-- Inventory View -->
             <section id="inventory-view" class="view">
-                <h2 class="view-title">Manage Books</h2>
                 <button class="btn btn-primary" style="margin-bottom: 24px;" onclick="openBookForm()">+ Add New
                     Book</button>
+
+                <!-- Inventory Statistics Row -->
+                <div class="inventory-stats-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+                    <div class="stat-card glass" style="padding: 16px; border-radius: 20px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color); background: white;">
+                        <div style="background: rgba(14, 116, 144, 0.1); color: var(--primary-light); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i data-lucide="library" style="width: 20px; height: 20px;"></i>
+                        </div>
+                        <div style="min-width: 0;">
+                            <p style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Total Books</p>
+                            <p id="stat-total-books" style="font-size: 18px; font-weight: 800; color: var(--primary-color); margin: 0;">...</p>
+                        </div>
+                    </div>
+                    <div class="stat-card glass" style="padding: 16px; border-radius: 20px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border-color); background: white;">
+                        <div style="background: rgba(245, 158, 11, 0.1); color: var(--secondary-color); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i data-lucide="book-check" style="width: 20px; height: 20px;"></i>
+                        </div>
+                        <div style="min-width: 0;">
+                            <p style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Borrowed</p>
+                            <p id="stat-borrowed-books" style="font-size: 18px; font-weight: 800; color: var(--secondary-color); margin: 0;">...</p>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Inventory Search Bar -->
                 <div class="search-container" style="margin-bottom: 24px;">
