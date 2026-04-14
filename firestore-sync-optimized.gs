@@ -331,17 +331,19 @@ function syncMembersFromFirestore() {
       member.bloodGroup || "",
       member.joiningDate || "",
       member.deposit || "",
-      member.vitalStatus || "Active" // Column L (Status)
+      member.vitalStatus || "Active", // Column L (Status)
+      "", // Column M (Reserved for Hash, will be auto-calculated)
+      member.last_updated || new Date().toISOString() // Column N (Last Update)
     ];
 
     if (rowIndex > 0) {
       // Update existing
-      sheet.getRange(rowIndex, 1, 1, 12).setValues([rowData]);
+      sheet.getRange(rowIndex, 1, 1, 14).setValues([rowData]);
       console.log(`Updated member in sheet: ${member.name}`);
     } else {
       // Append new
       sheet.appendRow(rowData);
-      console.log(`Added new member to sheet: ${member.name}`);
+      console.log(`Appended new member to sheet: ${member.name}`);
     }
   });
 
