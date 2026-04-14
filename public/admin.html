@@ -430,7 +430,11 @@
             <path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 1 .6 5" />
             <path d="M17 17H3s3-2 3-9" />
             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-            <line x1="2" y1="2" x2="22" y2="22" />
+        <symbol id="icon-bar-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" x2="12" y1="20" y2="10" />
+            <line x1="18" x2="18" y1="20" y2="4" />
+            <line x1="6" x2="6" y1="20" y2="16" />
         </symbol>
     </svg>
 
@@ -1035,6 +1039,75 @@
                     </div>
                 </footer>
             </section>
+            
+            <!-- Reports View -->
+            <section id="reports-view" class="view">
+                <div style="margin-bottom: 24px;">
+                    <h2 class="view-title">Library Reports</h2>
+                </div>
+
+                <!-- Monthly Selection Bar -->
+                <div id="report-period-selector" class="glass" style="margin-bottom: 24px; padding: 20px; border-radius: 20px; border: 1px solid var(--border-color); background: white;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div class="custom-dropdown" id="report-month-dropdown" style="width: 100%;">
+                            <div class="dropdown-trigger" id="report-month-trigger" style="background: var(--bg-color); border: none;">
+                                <span id="report-month-text">April</span>
+                                <svg class="lucide"><use href="#icon-chevron-down" /></svg>
+                            </div>
+                            <div class="dropdown-menu" id="report-month-menu" style="width: 100%;">
+                                <div class="dropdown-option" data-value="0" data-label="January">January</div>
+                                <div class="dropdown-option" data-value="1" data-label="February">February</div>
+                                <div class="dropdown-option" data-value="2" data-label="March">March</div>
+                                <div class="dropdown-option" data-value="3" data-label="April">April</div>
+                                <div class="dropdown-option" data-value="4" data-label="May">May</div>
+                                <div class="dropdown-option" data-value="5" data-label="June">June</div>
+                                <div class="dropdown-option" data-value="6" data-label="July">July</div>
+                                <div class="dropdown-option" data-value="7" data-label="August">August</div>
+                                <div class="dropdown-option" data-value="8" data-label="September">September</div>
+                                <div class="dropdown-option" data-value="9" data-label="October">October</div>
+                                <div class="dropdown-option" data-value="10" data-label="November">November</div>
+                                <div class="dropdown-option" data-value="11" data-label="December">December</div>
+                            </div>
+                        </div>
+                        <div class="custom-dropdown" id="report-year-dropdown" style="width: 100%;">
+                            <div class="dropdown-trigger" id="report-year-trigger" style="background: var(--bg-color); border: none;">
+                                <span id="report-year-text">2026</span>
+                                <svg class="lucide"><use href="#icon-chevron-down" /></svg>
+                            </div>
+                            <div class="dropdown-menu" id="report-year-menu" style="width: 100%;">
+                                <div class="dropdown-option" data-value="2024">2024</div>
+                                <div class="dropdown-option" data-value="2025">2025</div>
+                                <div class="dropdown-option" data-value="2026">2026</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100" style="padding: 14px; font-weight: 700;" onclick="handleGenerateReport()">
+                        <i data-lucide="refresh-cw" style="width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;"></i>
+                        Generate Monthly Report
+                    </button>
+                </div>
+
+                <!-- Report Summary Stats -->
+                <div id="report-content">
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i data-lucide="bar-chart-2" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                        <p>Select a month and click generate to view library analytics.</p>
+                    </div>
+                </div>
+
+                <footer class="app-footer">
+                    <div class="footer-container">
+                        <div class="footer-grid">
+                            <div class="footer-col footer-brand">
+                                <span class="footer-logo">Navodhayam Admin</span>
+                                <p class="footer-tagline">Librarian management portal. Empowering rural communities through organized knowledge access.</p>
+                            </div>
+                        </div>
+                        <div class="footer-divider"></div>
+                        <p class="footer-copy" style="text-align: center;">© 2026 Navodhayam. All rights reserved.</p>
+                    </div>
+                </footer>
+            </section>
         </main>
 
         <nav class="bottom-nav">
@@ -1055,6 +1128,12 @@
                         <use href="#icon-users" />
                     </svg></span>
                 <span>Members</span>
+            </button>
+            <button class="nav-item" data-target="reports-view">
+                <span class="nav-icon"><svg class="lucide">
+                        <use href="#icon-bar-chart" />
+                    </svg></span>
+                <span>Reports</span>
             </button>
         </nav>
     </div>

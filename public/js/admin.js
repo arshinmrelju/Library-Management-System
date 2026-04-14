@@ -101,7 +101,11 @@ let libraryData = {
     inventorySearchType: 'title',
     memberSearchType: 'name',
     totalBooks: 0,
-    borrowedCount: 0
+    borrowedCount: 0,
+    pendingRequestCount: 0,
+    attendedCount: 0,
+    reportMonth: new Date().getMonth(),
+    reportYear: new Date().getFullYear()
 };
 
 export function initAdmin() {
@@ -732,6 +736,11 @@ function setupDataListeners() {
 
         const others = libraryData.requests.filter(r => r.status !== 'pending');
         libraryData.requests = [...pendings, ...others];
+        
+        // Update global pending count
+        libraryData.pendingRequestCount = pendings.length;
+        updateDashboardCounts();
+
         if (currentView === 'requests-view') renderRequests();
     }, (error) => {
         console.error("PENDING Requests Listener Error:", error);
@@ -881,6 +890,12 @@ function navigateTo(viewId) {
     } else if (viewId === 'members-view') {
         switchMembersSubView(currentMembersSubView);
         renderMembers();
+    } else if (viewId === 'reports-view') {
+        // Handle reports initialization if needed
+        const content = document.getElementById('report-content');
+        if (content && content.innerHTML.includes('Select a month')) {
+            window.handleGenerateReport();
+        }
     }
 }
 window.navigateTo = navigateTo;
@@ -2546,4 +2561,144 @@ window.showConfirmModal = function (message, title = "Confirm Action") {
         okBtn.onclick = () => cleanup(true);
         cancelBtn.onclick = () => cleanup(false);
     });
+};
+
+// --- Reports Logic ---
+
+function updateDashboardCounts() {
+    // This could update a badge or header stat if we had one.
+    // For now, we'll ensure the reports view is informed if it's active.
+    if (currentView === 'reports-view') {
+        // Optional: refresh data or just show pending badge
+    }
+}
+
+window.handleGenerateReport = async function() {
+    const month = libraryData.reportMonth;
+    const year = libraryData.reportYear;
+    
+    const content = document.getElementById('report-content');
+    content.innerHTML = `
+        <div style="text-align: center; padding: 60px;">
+            <div class="spinner" style="margin: 0 auto 16px;"></div>
+            <p style="color: var(--text-muted); font-size: 14px;">Analyzing library records for ${getMonthName(month)} ${year}...</p>
+        </div>
+    `;
+
+    try {
+        const stats = await fetchMonthlyReport(month, year);
+        renderReports(stats);
+    } catch (e) {
+        console.error("Report generation failed:", e);
+        content.innerHTML = `<p style="color:var(--danger-color); text-align:center; padding: 40px;">Failed to generate report: ${e.message}</p>`;
+    }
+};
+
+function getMonthName(m) {
+    return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][m];
+}
+
+async function fetchMonthlyReport(month, year) {
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0, 23, 59, 59);
+
+    const q = query(
+        collection(db, "requests"),
+        where("timestamp", ">=", startDate),
+        where("timestamp", "<=", endDate)
+    );
+
+    const snapshot = await getDocs(q);
+    const stats = {
+        total: snapshot.size,
+        approved: 0,
+        rejected: 0,
+        pending: 0,
+        returned: 0,
+        month: getMonthName(month),
+        year: year
+    };
+
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.status === 'borrowed') stats.approved++;
+        else if (data.status === 'returned') {
+            stats.approved++;
+            stats.returned++;
+        }
+        else if (data.status === 'rejected') stats.rejected++;
+        else if (data.status === 'pending') stats.pending++;
+    });
+
+    return stats;
+}
+
+function renderReports(stats) {
+    const content = document.getElementById('report-content');
+    const handled = stats.approved + stats.rejected;
+    const successRate = handled > 0 ? Math.round((stats.approved / handled) * 100) : 0;
+
+    content.innerHTML = `
+        <div class="report-summary-card glass" style="background: white; border-radius: 24px; padding: 24px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 800; color: var(--text-primary); margin: 0;">${stats.month} ${stats.year} Summary</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Library Activity Report</p>
+                </div>
+                <div style="background: var(--primary-light); color: white; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 700;">
+                    ${successRate}% Approval Rate
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div style="background: var(--bg-color); padding: 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.03);">
+                    <p style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Total Requests</p>
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 28px; font-weight: 800; color: var(--text-primary);">${stats.total}</span>
+                        <span style="font-size: 12px; color: var(--text-muted);">records</span>
+                    </div>
+                </div>
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 20px; border: 1px solid #dcfce7;">
+                    <p style="font-size: 11px; font-weight: 800; color: #166534; text-transform: uppercase; margin-bottom: 8px;">Successful Loans</p>
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 28px; font-weight: 800; color: #166534;">${stats.approved}</span>
+                        <i data-lucide="check-circle" style="width: 14px; height: 14px; color: #22c55e;"></i>
+                    </div>
+                </div>
+                <div style="background: #fff1f2; padding: 16px; border-radius: 20px; border: 1px solid #ffe4e6;">
+                    <p style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; margin-bottom: 8px;">Rejected</p>
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 28px; font-weight: 800; color: #9f1239;">${stats.rejected}</span>
+                    </div>
+                </div>
+                <div style="background: #fdfaf1; padding: 16px; border-radius: 20px; border: 1px solid #fef3c7;">
+                    <p style="font-size: 11px; font-weight: 800; color: #92400e; text-transform: uppercase; margin-bottom: 8px;">Books Returned</p>
+                    <div style="display: flex; align-items: baseline; gap: 8px;">
+                        <span style="font-size: 28px; font-weight: 800; color: #92400e;">${stats.returned}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px dashed var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 13px; color: var(--text-secondary);">Unprocessed (Pending)</span>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--primary-color);">${stats.pending}</span>
+                </div>
+                <div style="width: 100%; height: 6px; background: var(--bg-color); border-radius: 10px; margin-top: 12px; overflow: hidden;">
+                    <div style="width: ${stats.total > 0 ? (handled / stats.total) * 100 : 0}%; height: 100%; background: var(--primary-color); border-radius: 10px;"></div>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">${handled} out of ${stats.total} requests have been processed.</p>
+            </div>
+        </div>
+
+        <button class="btn glass w-100" style="padding: 14px; color: var(--primary-color); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--primary-light);" onclick="window.printReport()">
+            <i data-lucide="printer" style="width: 18px; height: 18px;"></i>
+            Print Report
+        </button>
+    `;
+    lucide.createIcons();
+}
+
+window.printReport = function() {
+    window.print();
 };
