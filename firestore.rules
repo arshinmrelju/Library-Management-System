@@ -51,7 +51,8 @@ service cloud.firestore {
 
     match /books/{bookId} {
       allow read: if true;
-      allow create, delete: if isAdmin() && isValidBook(request.resource.data);
+      allow create: if isAdmin() && isValidBook(request.resource.data);
+      allow delete: if isAdmin();
       allow update: if isAdmin() || (canUpdateCoverOnly() && isValidBook(request.resource.data));
     }
 
@@ -65,13 +66,15 @@ service cloud.firestore {
       allow create: if request.auth != null && isValidMember(request.resource.data);
       allow get: if isAdmin() || isOwner(resource.data);
       allow list: if isAdmin();
-      allow update, delete: if isAdmin() && isValidMember(request.resource.data);
+      allow update: if isAdmin() && isValidMember(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /requests/{requestId} {
       allow create: if request.auth != null && isValidRequest(request.resource.data);
       allow read: if isAdmin() || isOwner(resource.data);
-      allow update, delete: if isAdmin() && isValidRequest(request.resource.data);
+      allow update: if isAdmin() && isValidRequest(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /system_logs/{logId} {
