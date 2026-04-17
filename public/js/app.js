@@ -973,7 +973,7 @@ function renderMembershipView() {
                 
                 <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; font-size:11px; opacity:0.8; position:relative; z-index:1;">
                     <span style="font-weight:700; letter-spacing:1px;">ID: ${m.memberId || 'N/A'}</span>
-                    <span style="background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:12px;">Valid Lifetime</span>
+                    <span style="${m.isLifetime ? 'background:#fcd34d; color:#92400e; font-weight:800;' : 'background:rgba(255,255,255,0.1);'} padding:4px 8px; border-radius:12px;">${m.isLifetime ? 'Lifetime Member' : 'Active Member'}</span>
                 </div>
             </div>
             

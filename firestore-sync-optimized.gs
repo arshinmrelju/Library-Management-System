@@ -165,6 +165,9 @@ function syncMembersFromSheet() {
   const dataRange = sheet.getRange(startRow, 1, numRows, SYNC_CONFIG_MEMBERS.HASH_COL);
   const data = dataRange.getValues();
   
+  const bgColorsRange = sheet.getRange(startRow, 2, numRows, 1); // Column B is 2
+  const bgColors = bgColorsRange.getBackgrounds();
+  
   const writeBatch = [];
   const updatedHashes = [];
   let syncCount = 0;
@@ -172,6 +175,11 @@ function syncMembersFromSheet() {
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
     let memberId = String(row[1] || "").trim(); // Column B
+    
+    // Determine if it's a lifetime membership based on background color
+    let bgCol = bgColors[i][0];
+    let isLifetime = (bgCol !== '#ffffff' && bgCol !== '#fff2cc' && bgCol !== null && bgCol !== '');
+
     let email = String(row[6] || "").trim().toLowerCase(); // Column G
     let phone = String(row[5] || "").trim(); // Column F
     
@@ -210,7 +218,8 @@ function syncMembersFromSheet() {
       status: 'approved', // 🔥 Force 'approved' for all sheet members so they show up in the app
       timestamp: new Date().toISOString(),
       last_updated: new Date().toISOString(),
-      source: 'sheet'
+      source: 'sheet',
+      isLifetime: isLifetime
     };
 
     const currentHash = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, JSON.stringify(memberData)));

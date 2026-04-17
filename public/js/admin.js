@@ -1259,7 +1259,10 @@ function renderMembers() {
             card.style.cursor = 'pointer';
             card.innerHTML = `
                 <div class="req-header">
-                    <span class="req-user">${m.name}</span>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="req-user">${m.name}</span>
+                        ${m.isLifetime ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 800; border: 1px solid #fcd34d;">LIFETIME</span>' : ''}
+                    </div>
                     <span style="color:var(--success-color);">Active</span>
                 </div>
                 <div class="req-info">
@@ -1370,7 +1373,10 @@ window.showMemberDetail = function (memberId) {
     const statusBadge = m.status === 'approved'
         ? (isDeceased 
             ? '<span style="background:#f1f5f9; color:#64748b; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; border:1px solid #e2e8f0;">Deceased Record</span>'
-            : '<span style="background:#ecfdf5; color:#059669; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase;">Active Member</span>')
+            : `<div style="display:flex; gap:8px; justify-content:center; align-items:center;">
+                <span style="background:#ecfdf5; color:#059669; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase;">Active Member</span>
+                ${m.isLifetime ? '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; border: 1px solid #fcd34d;">Lifetime Membership</span>' : ''}
+               </div>`)
         : '<span style="background:#fff7ed; color:#9a3412; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase;">Pending Approval</span>';
 
     const memberRequests = libraryData.requests ? libraryData.requests.filter(req => {
