@@ -1,0 +1,42 @@
+{
+  "name": "Navodhayam Admin",
+  "short_name": "NL Admin",
+  "description": "Librarian Admin Portal for Navodhayam Library. Manage requests, inventory, and library members.",
+  "id": "/admin.html",
+  "start_url": "/admin.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#083344",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon-watermark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Pending Requests",
+      "short_name": "Requests",
+      "description": "View and manage pending book requests",
+      "url": "/admin.html",
+      "icons": [{ "src": "favicon-watermark.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Inventory",
+      "short_name": "Inventory",
+      "description": "Manage the library book inventory",
+      "url": "/admin.html",
+      "icons": [{ "src": "favicon-watermark.svg", "sizes": "any" }]
+    }
+  ]
+}
