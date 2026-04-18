@@ -16,7 +16,10 @@ const ASSETS_TO_CACHE = [
     'js/admin.js',
     'js/firebase-config.js',
     'favicon.svg',
+    'icon-192.png',
     'icon-512.png',
+    'screenshot-desktop.png',
+    'screenshot-mobile.png',
     'https://unpkg.com/lucide@0.363.0',
     'https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;500;700&display=swap'
 ];

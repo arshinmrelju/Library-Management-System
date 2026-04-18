@@ -9,6 +9,7 @@
   "background_color": "#f8fafc",
   "theme_color": "#083344",
   "orientation": "portrait",
+  "categories": ["education", "utilities", "productivity"],
   "icons": [
     {
       "src": "favicon-watermark.svg",
@@ -17,10 +18,32 @@
       "purpose": "any"
     },
     {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-desktop.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Admin Dashboard Desktop View"
+    },
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Admin Dashboard Mobile View"
     }
   ],
   "shortcuts": [
