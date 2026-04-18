@@ -257,6 +257,7 @@ main {
 }
 
 .nav-item {
+    position: relative;
     background: none;
     border: none;
     color: var(--text-muted);

@@ -153,6 +153,7 @@ let libraryData = {
     totalBooks: 0,
     borrowedCount: 0,
     pendingRequestCount: 0,
+    pendingMembersCount: 0,
     attendedCount: 0,
     reportMonth: new Date().getMonth(),
     reportYear: new Date().getFullYear(),
@@ -875,6 +876,11 @@ function setupDataListeners() {
 
         const others = libraryData.members.filter(m => m.status !== 'pending');
         libraryData.members = [...pendings, ...others];
+        
+        // Update global pending members count
+        libraryData.pendingMembersCount = pendings.length;
+        updateDashboardCounts();
+
         if (currentView === 'members-view') renderMembers();
     }, (error) => {
         console.error("PENDING Members Listener Error:", error);
@@ -893,6 +899,7 @@ function setupDataListeners() {
     onSnapshot(bq, (snapshot) => {
         libraryData.borrowedCount = snapshot.size;
         renderInventoryStats();
+        updateDashboardCounts();
     }, (error) => {
         console.error("Borrowed Books Listener Error:", error);
     });
@@ -2862,10 +2869,37 @@ window.showConfirmModal = function (message, title = "Confirm Action") {
 // --- Reports Logic ---
 
 function updateDashboardCounts() {
-    // This could update a badge or header stat if we had one.
-    // For now, we'll ensure the reports view is informed if it's active.
-    if (currentView === 'reports-view') {
-        // Optional: refresh data or just show pending badge
+    const bottomBadge = document.getElementById('requests-badge-bottom');
+    const subReqBadge = document.getElementById('sub-requests-badge');
+    const subBorrowBadge = document.getElementById('sub-borrows-badge');
+    const subMemBadge = document.getElementById('sub-members-pending-badge');
+
+    const reqCount = libraryData.pendingRequestCount || 0;
+    const borrowCount = libraryData.borrowedCount || 0;
+    const memCount = libraryData.pendingMembersCount || 0;
+
+    // Bottom Nav Badge (Book Requests)
+    if (bottomBadge) {
+        bottomBadge.textContent = reqCount;
+        bottomBadge.style.display = reqCount > 0 ? 'flex' : 'none';
+    }
+
+    // Sub-nav Request Badge (Book Requests)
+    if (subReqBadge) {
+        subReqBadge.textContent = reqCount;
+        subReqBadge.style.display = reqCount > 0 ? 'inline-flex' : 'none';
+    }
+
+    // Sub-nav Borrow Badge (Active Loans)
+    if (subBorrowBadge) {
+        subBorrowBadge.textContent = borrowCount;
+        subBorrowBadge.style.display = borrowCount > 0 ? 'inline-flex' : 'none';
+    }
+
+    // Sub-nav Members Badge (Pending Applications)
+    if (subMemBadge) {
+        subMemBadge.textContent = memCount;
+        subMemBadge.style.display = memCount > 0 ? 'inline-flex' : 'none';
     }
 }
 
