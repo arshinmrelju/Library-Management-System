@@ -17,6 +17,8 @@ const ASSETS_TO_CACHE = [
     'js/firebase-config.js',
     'favicon.svg',
     'icon-192.png',
+    'icon-144.png',
+    'icon-96.png',
     'icon-512.png',
     'screenshot-desktop.png',
     'screenshot-mobile.png',
